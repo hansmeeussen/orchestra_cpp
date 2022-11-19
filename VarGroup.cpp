@@ -38,6 +38,7 @@ namespace orchestracpp
 			throw ReadException("Could not find variable: " + variableName + " to create synonym!");
 		}
 		variableIndx.emplace(synonym, tmpVariable);
+		synonyms.emplace(synonym, variableName);
 	}
 
 	Var* VarGroup::get(const std::string &name)
@@ -122,6 +123,11 @@ namespace orchestracpp
 			line += '\t';
 		}
 		return line;
+	}
+
+
+	std::unordered_map <std::string, std::string>* VarGroup::getSynonyms() {
+		return &synonyms;
 	}
 
 	std::string VarGroup::getVariableValuesLine()

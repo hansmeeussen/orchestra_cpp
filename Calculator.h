@@ -66,6 +66,7 @@ namespace orchestracpp
 		int failedIndex = -100; // will be overwritten at initialisation
 		int nodeIDIndex = -101;
 		Node *orgNode = nullptr;
+		bool silent = false;
 
 	public:
 		virtual ~Calculator()
@@ -135,6 +136,8 @@ namespace orchestracpp
 		 */
 	public:
 		virtual void copyUnknowns(Node *from, Node *to);
+
+		virtual std::unordered_map <std::string, std::string>* getSynonyms();
 
 		virtual std::vector<Var*>* getGlobalVariables();
 

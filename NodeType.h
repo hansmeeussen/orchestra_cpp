@@ -30,6 +30,7 @@ namespace orchestracpp
 
 	public:
 		std::vector<std::string> names;    // names of node variables
+		std::vector<std::string> outputVariables;;
 		std::vector<double> defaultValues; // default values for node variables
 		std::unordered_map<std::string, std::string> varSource; //= std::unordered_map(); // the source of the variable definition
 		int nrVars   = 0; // number of node variables
@@ -55,6 +56,8 @@ namespace orchestracpp
 		void addVariable(const std::string &name, double value, bool is_static, const std::string &source);
 
 		void addSynonym(const std::string &synonym, const std::string &name);
+
+		void updateSynonyms();
 
 		int index(const std::string &name);
 

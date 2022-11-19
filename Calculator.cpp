@@ -68,7 +68,7 @@ namespace orchestracpp
 
 
 			readSystemFromExpandedInput(expandedText);
-			IO::print(expandedText);
+			//IO::print(expandedText);
 		}
 		catch (const OrchestraException& e)
 		{
@@ -199,6 +199,9 @@ namespace orchestracpp
 				else if (word == "@trysteps:") {
 					nrIntermediateNodes = infile->readInt();
 				}
+				else if (word == "@silent:") {
+					silent = true;
+				}
 						
 			}
 
@@ -317,7 +320,7 @@ namespace orchestracpp
 
 		if (calculationSuccessful && trying)
 		{
-			IO::println("Trying better start estimations was successful!!");
+			if(!silent) IO::println("Trying better start estimations was successful!!");
 		}
 
 		trying = false;
@@ -454,11 +457,11 @@ namespace orchestracpp
 
 		if (trylevel == 1)
 		{
-			IO::println(name->name + ": Improving start estimations:.");
+			if (!silent) IO::println(name->name + ": Improving start estimations:.");
 		}
 		else if (trylevel > 1)
 		{
-			IO::print(".");
+			if (!silent) IO::print(".");
 		}
 
 		Node *interimNode = new Node(last_successful_node->nodeType);
@@ -479,9 +482,9 @@ namespace orchestracpp
 				delete interimNode;
 				return false;
 			}
-			IO::print("&");
+			if (!silent) IO::print("&");
 		}
-		IO::println("|");
+		if (!silent) IO::println("|");
 
 		node->clone(interimNode);
 		trylevel--;
@@ -541,6 +544,10 @@ namespace orchestracpp
 		}
 	}
 
+	std::unordered_map <std::string, std::string>* Calculator::getSynonyms() {
+		return variables->getSynonyms();
+	}	
+	
 	std::vector<Var*>* Calculator::getGlobalVariables()
 	{
 		return variables->getGlobalVariables();
@@ -550,4 +557,5 @@ namespace orchestracpp
 	{
 		return variables->getVariableNames();
 	}
+
 }

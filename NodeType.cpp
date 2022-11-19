@@ -28,12 +28,35 @@ namespace orchestracpp
 	}
 
 	void NodeType::addSynonym(const std::string& synonym, const std::string& name) {
+		if (synonym == name)return;
 		synonyms.emplace(synonym, name);
-		indices.emplace(synonym, index(name));
+		updateSynonyms();
 	}
 
-	void NodeType::addVariable(const std::string &name, double value, bool is_static, const std::string &source)
+	void NodeType::updateSynonyms() {
+
+		for (auto entry = synonyms.begin(); entry != synonyms.end(); entry++) {
+			int i = index(entry->second);// check if name exists
+			if (i >= 0) {// variable exists
+				if (index(entry->first) < 0) { /// synonym does not yet exist
+					indices.emplace(entry->first, i); // put synonym with index to variable
+				}
+			}
+		}
+
+	}
+
+	void NodeType::addVariable(const std::string& name, double value, bool is_static, const std::string& source)
 	{
+		
+		auto it = synonyms.find(name);
+		if (it != synonyms.end()) {
+			// add the variable to which the synonym points instead
+			addVariable(it->second, value, is_static, source);
+			return;
+		}
+
+
 			if (isInitialised)
 			{
 				IO::println("It is not possible to add node variables after initialisation of node type!");
@@ -90,16 +113,7 @@ namespace orchestracpp
 					indices.emplace(names[i], i);
 				}
 
-				// we also need to updat the synonym indices                        
-				//synonyms.forEach((k, v)->indices.put(k, index(v)));
-
-
-		        for (std::pair<std::string, std::string> item : synonyms) {
-					std::string synonym = item.first;
-					std::string name = item.second;
-					indices.emplace(synonym, index(name));
-				}
-
+				updateSynonyms();
 
 			}
 			 
@@ -125,6 +139,7 @@ namespace orchestracpp
 		}
 	}
 
+	// can also be a synonym!
 	bool NodeType::isVariablePresent(const std::string& name) {
 		auto it = indices.find(name);
 		if (it == indices.end()) {
@@ -203,6 +218,18 @@ namespace orchestracpp
 			}
 			addVariable(name, variable->getIniValue(), false, calculator->name->name); // name points to a FileID
 
+		}
+
+	// java
+	// add the synonyms from the calculator as well.
+	//	calculator.getSynonyms().forEach((synonym, name) -> {
+	//		addSynonym(synonym, name);
+	//	});
+
+		std::unordered_map <std::string, std::string>* calculatorSynonyms = calculator->getSynonyms();
+
+		for (auto entry = calculatorSynonyms->begin(); entry != calculatorSynonyms->end(); entry++) {
+			addSynonym(entry->first, entry->second);
 		}
 
 	}

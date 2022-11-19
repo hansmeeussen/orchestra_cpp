@@ -14,6 +14,8 @@ namespace orchestracpp
 		int index = 0;
 		std::vector<Var*> usedVars; // contains already used variables
 
+		nodeType->updateSynonyms();
+
 		for (auto globalName : nodeType->names)
 		{
 			Var *local = variables->get(prefix + globalName);

@@ -33,9 +33,10 @@ namespace orchestracpp
 		std::unordered_map <std::string, Var*> variableIndx; // the variables by name 
 		std::vector<std::string> allVariableNames;
 
+
 	public:
 		std::vector<Var*> globalVariables;   // Variables that the calculator would like to see stored globally in nodes
-
+		std::unordered_map <std::string, std::string> synonyms;
 
 		virtual ~VarGroup()
 		{
@@ -73,6 +74,8 @@ namespace orchestracpp
 		virtual std::string getVariableNamesLine();
 
 		virtual std::string getVariableValuesLine();
+
+		virtual std::unordered_map <std::string, std::string>* getSynonyms();
 
 	};
 

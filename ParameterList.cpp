@@ -13,7 +13,7 @@ using namespace std;
 namespace orchestracpp
 {
 
-	ParameterList::ParameterList(const std::string &s) : ParameterList( new OrchestraReader (s))
+	ParameterList::ParameterList(const std::string &s) : ParameterList( new OrchestraReader (StringHelper::trim(s)))
 	{
     }
 
