@@ -469,8 +469,8 @@ namespace orchestracpp
 		interimNode->clone(last_successful_node);
 
 		//double f = 0.05; //20 steps
-		//int m = nrIntermediateNodes;
-		int m = 30;
+		int m = nrIntermediateNodes;
+		//int m = 30;
 		for (int n = 0; n <= m; n++)
 		{
 			interimNode->nodeBetween(last_successful_node, node, (static_cast<double>(n) / static_cast<double>(m)));
