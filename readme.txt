@@ -1,12 +1,12 @@
 //----------------------------------------------------------------------------------------------------------------------
-// ORCHESTRA chemical solver module
-// Version 2022
+// ORCHESTRA chemical solver module, C++ version
+// Version 2023
 // 
-// This set of C++ files contains the complete ORCHESTRA (chemical) solver module.
+// This set of C++ files represents the complete ORCHESTRA (chemical) solver module.
 // It is a literal translation of the the original Java version and was prepared to facilitate coupling to other (e.g. mass transport) codes,
 // and to make it easier to call the solver directly from Python.
-// The C++ version has exactly the same functionality as the Java version and can read chemical system definitions from the same text input files.
-// In practice it will be convenient to create these input files interactively with the Java GUI.
+// The C++ version has (should have) exactly the same functionality as the Java version and can read chemical system definitions from the same text input files.
+// Chemical input files can be created interactively with the Java GUI.
 //
 // Because ORCHESTRA reads all chemical models (variables / equations etc) from input text files at run time, 
 // the C++ version automatically has the same chemical modelling capabilities as the Java version.
@@ -20,8 +20,8 @@
 // https://igdtp.eu/activity/donut-development-and-improvement-of-numerical-methods-and-tools-for-modelling-coupled-processes
 //
 // Hans Meeussen
-// Nuclear Research and Consultancy Group (NRG) 
-// meeussen@nrg.eu
-// August 2022
+// Nuclear Research and Consultancy Group (NRG):  meeussen@nrg.eu, 
+// Delft University of Technology: j.c.l.meeussen@tudelft.nl
+// March 2023
 // www.meeussen.nl/orchestra 
 //---------------------------------------------------------------------------------------------------------------------------
