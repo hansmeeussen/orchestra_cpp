@@ -27,7 +27,7 @@ namespace orchestracpp
 			// perform a first calculation on an equilibrated node
 			// this is useful for benchmarking different methods, as the first calculation
 			// for each calcultor is slow because of initialisation
-			//tmpCalculator->calculate(nodes->at(0), sf);
+			tmpCalculator->calculate(nodes->at(0), sf);
 
 			calculators.push_back(tmpCalculator);
 		}
@@ -41,6 +41,11 @@ namespace orchestracpp
 		}
 
 
+	}
+
+	void NodeProcessor::processNodes(vector<Node*>* nodes, int mo) {
+		this->memoryOption = mo;
+		processNodes(nodes);
 	}
 
 	void NodeProcessor::processNodes(vector<Node*>* nodes) {
@@ -117,7 +122,11 @@ namespace orchestracpp
 			while (true) {
 				Node* node = getNextNode();
 				if (node == nullptr)break;
-				c->calculate(node, sf);
+				if (memoryOption == 0) {
+			    	c->calculate(node, sf);
+			    }else{
+				    c->calculate2(node, sf);
+			    }
 			}
 		}
 

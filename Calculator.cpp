@@ -228,6 +228,25 @@ namespace orchestracpp
 
 	}
 
+	bool Calculator::calculate2(Node* const node, StopFlag* flag) //throw(ReadException, ParserException, ExitException)
+	{
+		if (lastSuccessfulNode2 == nullptr)
+		{
+			// The first calculation with this calculator
+			lastSuccessfulNode2 = node->clone(); 
+		}
+		else {
+			this->copyUnknowns(lastSuccessfulNode2, node);
+		}
+
+		bool success = calculate(node, flag);
+
+		if (success) {
+			lastSuccessfulNode2 = node->clone();
+		}
+		return success;
+	}
+
 	bool Calculator::calculate(Node *const node, StopFlag *flag) //throw(ReadException, ParserException, ExitException)
 	{
 		calculatorStopFlag = flag;

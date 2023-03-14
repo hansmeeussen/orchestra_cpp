@@ -50,6 +50,7 @@ namespace orchestracpp
 
 		NodeIOObject *iob1            = nullptr;
 		Node *localLastSuccessfulNode = nullptr; // should we store this one not locally, but in the calculator group? or threadgroup?
+		Node* lastSuccessfulNode2     = nullptr;
 
 	private:
 		int trylevel = 0;
@@ -79,6 +80,7 @@ namespace orchestracpp
 			//delete localLastSuccessfulNode;
 			//delete calculatorStopFlag;
 			//delete orgNode;
+			delete lastSuccessfulNode2;
 		}
 
 		Calculator();
@@ -105,6 +107,8 @@ namespace orchestracpp
 		 */
 	public:
 		virtual bool calculate(Node *const node, StopFlag *flag)/* throw(ReadException, ParserException, ExitException)*/;
+
+		virtual bool calculate2(Node* const node, StopFlag* flag)/* throw(ReadException, ParserException, ExitException)*/;
 
 		/**
 		 * This recursive method tries to calculate a node with a calculator it uses

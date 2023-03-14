@@ -1,5 +1,6 @@
 #pragma once
 
+#include <condition_variable>
 #include <thread>
 #include <mutex>
 
@@ -30,6 +31,7 @@ namespace orchestracpp
 		atomic_bool waitforprocessing;
 	    bool processingready;
 		atomic_bool quit = false;
+		int memoryOption = 0; // 0 = no memory, so use previous node value (transport),  1 = use previous succesful node  (serial calculation, transport intialize)
 
 	public:
 	
@@ -50,6 +52,8 @@ namespace orchestracpp
 		NodeProcessor(Calculator*, int, StopFlag*, vector<Node*>* nodes);
 
 		void processNodes(vector<Node*>*);
+
+		void processNodes(vector<Node*>*, int memoryOption);
 
 		void pleaseStop();
 
