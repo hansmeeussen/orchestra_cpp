@@ -28,18 +28,21 @@
 //
 // Calculator:
 // Represents the chemical solver that is defined by its own text inputfile in terms of substances and reactions etc.
-// This input file can be composed / edited with the Java GUI. 
-// Calculators operate on Nodes (or cells) which contain all Calculator input and output variables.
-// All input - output of calculator variables can only happen via Nodes.
+// In contrast with PHREEQC the input file contains all chemical info required, so no additional access to databases is necessary.
+//
+// The input file can be composed / edited with the Java GUI. (which does use thermodynamic (PHREEQC format) databases)
+// 
+// Calculators operate on Nodes (or cells) which contain the input and output variables for the solver
+// All input - output of calculator variables needs to happen via the Nodes.
 //
 //
 // Node: 
 // A Node (or cell) contains a set of variables that is used as input - output for calculators.
-// Variable names that exist in both Node and Calculator are automatically used for IO.
+// Variable names that exist in both Node and Calculator are automatically used for communication between solver and node.
 // The Node variables are user-definable, but additionally a Calculator can indicate which variables it wants to store in a Node
-// to make recalculation of the Node efficient (e.g. store values of of unknowns).
+// to make recalculation of the Node efficient (e.g. store values of unknowns).
 // A Node contains all necessary state variables to define a system cell and acts as memory between timesteps. 
-// It will usually be efficient to create an ORCHESTRA Node for each cell/node in existing code.
+// It will usually be efficient to create an ORCHESTRA Node for each cell/node in transport code.
 // Recalculating a Node that is already in equilibrium is very fast with the stored unknown variables from the previous calculation.
 //
 //
@@ -70,19 +73,72 @@
 #include "StopFlag.h"
 #include "IO.h"
 #include "NodeProcessor.h"
-//#include <omp.h> 
 
 
 using namespace std;
 using namespace std::chrono;
 using namespace orchestracpp;
 
+
+// This function performs a complete test and writes results to report file
+void test(string name, vector<Node*>* nodes, NodeProcessor* np, FileWriter* report, FileBasket fileBasket, ParameterList* outputVariableNames, vector<int>* outputIndx, int memoryOption, bool writeOutput) {
+	int nrThreads = std::thread::hardware_concurrency();
+	int iterindex = nodes->at(0)->nodeType->index("tot_nr_iter");
+
+	auto t0 = high_resolution_clock::now();
+	// perform the calculations
+	np->processNodes(nodes, memoryOption);
+	auto t1 = high_resolution_clock::now();
+	// determine the calculation time
+	auto duration = duration_cast<milliseconds>(t1 - t0).count();
+	if (duration < 1)duration = 1;
+	int tot_nr_iter = 0;
+
+	// determine total number of required iterations sum for all nodes
+	for (int n = 0; n < nodes->size(); n++) { tot_nr_iter += nodes->at(n)->getvalue(iterindex); }
+
+
+	// write result to report file and screen
+	string result = (name+": \t" + to_string(nodes->size()) + " nodes,   calculation time: " + to_string(duration) + " msec,  Calculations/sec:  " + to_string(nodes->size() * 1000 / duration) + " Total number of iterations: " + to_string(tot_nr_iter) + "\n");
+	cout << result;
+	report->write(result);
+
+	// write calculated data to output file for checking
+	if (writeOutput) {
+
+		FileWriter* fw = fileBasket.getFileWriter(&fileBasket, "output_" + name + ".txt");
+
+		// write header 
+		for (int n = 0; n < outputVariableNames->size(); n++) {
+			fw->write(outputVariableNames->get(n));
+			fw->write("\t");
+		}
+		fw->write("\n");
+
+		// write data
+		for (int n = 0; n < nodes->size(); n++) {
+			for (int i = 0; i < outputIndx->size(); i++) {
+				fw->write(StringHelper::toString(nodes->at(n)->getvalue(outputIndx->at(i))));
+				fw->write("\t");
+			}
+			fw->write("\n");
+		}
+		fw->write("\n");
+
+		fw->close();
+
+		delete fw;
+	}
+}
+
+
+
 int main()
 {
 
 	try {
 
-		IO::println("**** ORCHESTRA C++ chemical solver demonstration program, Version February 2021 ");
+		IO::println("**** ORCHESTRA C++ chemical solver demonstration program, Version July 2023 ");
 
 		//--------------------------------------------------------------------------------------------------------------------------
 		// 1: First we create a NodeType object
@@ -93,7 +149,7 @@ int main()
 		//--------------------------------------------------------------------------------------------------------------------------
         // 2: Then we create a FileBasket object which regulates all file IO
         //--------------------------------------------------------------------------------------------------------------------------
-		FileBasket* fileBasket = new FileBasket();
+		FileBasket fileBasket;
 
 		//--------------------------------------------------------------------------------------------------------------------------
 		// 3: Now we can use the fileBasket to set the working directory.
@@ -103,19 +159,25 @@ int main()
         //fileBasket.workingDirectory = "C:\\Users\\jmeeussen\\Desktop\\visualC\\testorchestra2\\testorchestra2\\hpx"; // place your workingdirectory here
 
 		//--------------------------------------------------------------------------------------------------------------------------
-		// 5:  We create a FileID, using the filebasket,  to open a chemistry inputfile
+		// 4:  We create a FileID, using the filebasket,  to open a chemistry inputfile for the solver
 		//--------------------------------------------------------------------------------------------------------------------------
-		FileID fileID(fileBasket, "chemistry1.inp");
+		FileID fileID(&fileBasket,  "chemistry1.inp");
+		//FileID fileID2(&fileBasket, "convertInput.inp"); 
 
 		//--------------------------------------------------------------------------------------------------------------------------
-        // 6: Now we can construct a calculator object from this input file
+        // 5: Now we can construct a calculator (solver) object from this input file
+		//    We can have multiple different calculators if necessary (e.g. to calculate different boundary conditions, 
+		//    or to convert input value)
         //--------------------------------------------------------------------------------------------------------------------------
 		Calculator calculator(&fileID);
+		//Calculator calculator(new FileID(&fileBasket, "chemistry1.inp"));
+		//Calculator convertInput(&fileID2);// a calculator to perform initial calculations
 
 		//--------------------------------------------------------------------------------------------------------------------------
-        // 6a: Standard the complete definition of the chemical system is read from the chemistry input file, but it is possible to 
-		//    add some additional text to the chemistry file (containing arbitrary calculations) which we can provide in an extra string.
-		//    This string is inserted at the start of the text of the chemical input file
+        // 5a: Standard the complete definition of the chemical system is read from the chemistry input file, but it is possible to 
+		//    add some additional text to the chemistry file (e.g. containing extra calculations) which we can provide in an extra string.
+		//    This string is inserted at the start of the text of the chemical input file. 
+		//    Used by HPX
         //--------------------------------------------------------------------------------------------------------------------------
 		//std::string extratext("@class: hpxtxt(){@Globalvar: hpxpipi 3.14}");
 		//Calculator calculator(&fileID, extratext); // providing addtional text
@@ -123,270 +185,224 @@ int main()
 		//Calculator calculator2 = *calculator1.clone(); // this is how we can clone a calculator
 
 
+
+
 		//--------------------------------------------------------------------------------------------------------------------------
-		// 7: We now ask the calculator for all the variables that it wants to store per node.
+		// 6: read all input data points from the file input.dat
+		//--------------------------------------------------------------------------------------------------------------------------
+
+		OrchestraReader* inputReader = OrchestraReader::getOrchestraFileReader(&fileBasket, "input.dat");
+
+
+		string line;
+        // skip initial comment lines
+		do {
+			line = StringHelper::trim(inputReader->readLine());
+		} while (StringHelper::startsWith(line, "#")||(line.size()<1));
+
+
+		// read the line with input variable names in the column headers
+		ParameterList inputVariableNames(line);
+
+		int nrColumns = inputVariableNames.size();
+
+		//  now read the data lines
+		std::vector<ParameterList*> dataLines;
+
+		do {
+			line = StringHelper::trim(inputReader->readLine());
+			// we could check whether the number of data columns in this line agrees with the number of variable names in the column header
+			ParameterList* inputDataLine = new ParameterList(line);
+			if (inputDataLine->size() > 0) {
+				dataLines.push_back(inputDataLine);
+			}
+		} while (!inputReader->ready);
+
+		cout << "We have " << dataLines.size() << " datapoints in input file!" << "\n";
+		//--------------------------------------------------------------------------------------------------------------------------
+
+		//--------------------------------------------------------------------------------------------------------------------------
+		// 7: Read the required output variable names from the column headers in output.dat
+		//    Normally we would also write the output to this file, but in this case we create different output files but 
+		//    use the variables defined here. 
+		//--------------------------------------------------------------------------------------------------------------------------
+		OrchestraReader* outputReader = OrchestraReader::getOrchestraFileReader(&fileBasket, "output.dat");
+
+
+		// skip the comment lines
+		do {
+			line = StringHelper::trim(outputReader->readLine());
+		} while (StringHelper::startsWith(line, "#") || (line.size() < 1));
+
+		// read the variable names in the column headers
+		ParameterList outputVariableNames(line);
+
+		cout << "We have " << outputVariableNames.size() << " variables in output file!" << "\n";
+		//--------------------------------------------------------------------------------------------------------------------------
+
+
+		//--------------------------------------------------------------------------------------------------------------------------
+		// 8: We now ask the calculator for all the variables that it wants to store per node.
 		//    This will include all variables that are defined as global variables in the calculator (plus their default values),
 		//    and all variables that are used as unknown / equation in the solver.
 		//    The latter is important for efficiency, as old unknown values can in this way be used as start estimations for unknowns
 		//    in a subsequent calculation.
+		//    We do this for all calculators in the system 
+		// 
+		//    In this way we have defined all variables that are stored in each node.
 		//--------------------------------------------------------------------------------------------------------------------------
 		nodeType.useGlobalVariablesFromCalculator(&calculator);
+		//nodeType.useGlobalVariablesFromCalculator(&convertInput);
 
-		// Just for a test we print all these variables and their default values
-		IO::println("The calculator " + calculator.name->name+" wants the following global variables to be stored in each cell :\n");
-		for (int n = 0; n < nodeType.getNrVars(); n++) {
-			cout << n << " : " << nodeType.getName(n) << endl;
+	    //--------------------------------------------------------------------------------------------------------------------------
+		// 9: Now we can add the input and output variables to the nodeType 
+		//    The "false" parameter indicates that each node has an individual value for this variable 
+		//    This in contrast with "true" which indicates static variables of which there is a single copy for all nodes (e.g. time or timestep etc.)
+		//    It is also possible to indicate where the variables definition originates from, in this case the input and output file.
+		//--------------------------------------------------------------------------------------------------------------------------
+		for (int n = 0; n < inputVariableNames.size(); n++) {
+			nodeType.addVariable(inputVariableNames.get(n), 0, false, "input.dat");
+		}
+
+		// do the same for output variables
+		for (int n = 0; n < outputVariableNames.size(); n++) {
+			nodeType.addVariable(outputVariableNames.get(n), 0, false, "output.dat");
+		}
+		//--------------------------------------------------------------------------------------------------------------------------
+
+		//--------------------------------------------------------------------------------------------------------------------------
+		//    We have now defined all variables that are stored in each node or cell.
+		// 
+		//--------------------------------------------------------------------------------------------------------------------------
+
+		//--------------------------------------------------------------------------------------------------------------------------
+		// 10: Now we can create just as many nodes as there are input datapoints
+		//--------------------------------------------------------------------------------------------------------------------------
+		vector<Node*> nodes;
+		for (int n = 0; n < dataLines.size(); n++) {
+			nodes.push_back(new Node(&nodeType));
 		}
 
 		//--------------------------------------------------------------------------------------------------------------------------
-		// 8: We also need a flag to stop the calculator(s) externally if necessary, which is needed in case of multithreaded systems 
+        // 11: For fast access to node variables we create integer indices to them
+        //--------------------------------------------------------------------------------------------------------------------------
+		// we do this for input..
+		vector<int> inputIndx;
+		for (int n = 0; n < inputVariableNames.size(); n++) {
+			inputIndx.push_back(nodeType.index(inputVariableNames.get(n)));
+		}
+
+		// as well as output variables.
+		vector<int> outputIndx;
+		for (int n = 0; n < outputVariableNames.size(); n++) {
+			outputIndx.push_back(nodeType.index(outputVariableNames.get(n)));
+		}
 		//--------------------------------------------------------------------------------------------------------------------------
+
+
+
+		//--------------------------------------------------------------------------------------------------------------------------
+		// 12: Now we can use the input indices to set the node variables with data read from the input file
+		//--------------------------------------------------------------------------------------------------------------------------
+		for (int n = 0; n < dataLines.size(); n++) {
+			for (int i = 0; i < dataLines[n]->size(); i++) {
+				nodes[n]->setValue(inputIndx[i], dataLines[n]->getDouble(i));
+			}
+		}
+
+		//--------------------------------------------------------------------------------------------------------------------------
+		// 13: Now we create 2 so-called nodeProcessors, the first one to perform single thread calculations,
+		//     the second one to perform parallel multi threaded calculations
+		//--------------------------------------------------------------------------------------------------------------------------
+		
+        // we also need a stopflag, which can be used to stop long running calculations running in the background in e.g. interactive calculations (not used here)
 		StopFlag* stopFlag = new StopFlag();
-		//stopFlag->pleaseStop("demo program line 126");// this is how we can stop all running calculators
+		//stopFlag->pleaseStop("demo program line 266");// this is how we can stop all running calculators
 
-		//--------------------------------------------------------------------------------------------------------------------------
-        // 9: Now we can add some extra variables that we would like to use for input/output
-		//    addVariable(<name>, <default value>, <is static>, <origin>)
-		//    a static variable has a single value that is shared by all cells/nodes of the same nodeType
-		//    the origin string is just a name to identify where the variable was created.
-		//    ANY variable in the chemical sysem is available for IO in this way!
-		//--------------------------------------------------------------------------------------------------------------------------
+		NodeProcessor single(&calculator, 1, stopFlag, &nodes); // single calculator 
+		NodeProcessor multi(&calculator, -1, stopFlag, &nodes); // negative number of calculators : automatically determine number of threads for the chemistry calculations		
 
-		nodeType.addVariable("tot_nr_iter", 0, false, "test");
-		nodeType.addVariable("pH",          7, false, "test");
-		nodeType.addVariable("O2.logact", -1,  false, "test");		
+		// we need 4 copies of the nodes to perform the benchmark on
+		vector<Node*> nodes_random_single;
+		vector<Node*> nodes_random_multi;
+		vector<Node*> nodes_sorted_single;
+		vector<Node*> nodes_sorted_multi;
 
-
-		//to access these variables efficiently we create indices to them
-		int indx_pH     = nodeType.index("pH");
-		int indx_nriter = nodeType.index("tot_nr_iter");
-		int indx_O2     = nodeType.index("O2.logact");
-		int indx_id     = nodeType.index("Node_ID");
-		int indx_Ca     = nodeType.index("Ca+2.tot");
-		int indx_pe     = nodeType.index("pe");
-
-		//--------------------------------------------------------------------------------------------------------------------------
-		// 10: Now we are ready to create a new node
-		Node node1(&nodeType);
-		//--------------------------------------------------------------------------------------------------------------------------
-
-		//--------------------------------------------------------------------------------------------------------------------------
-		// 11: Write output for all node variables before calculation
-		//--------------------------------------------------------------------------------------------------------------------------
-		cout.precision(14);
-		for (int n = 0; n < nodeType.getNrVars(); n++) {
-			cout<<n << " : " << nodeType.getName(n)<<   " : "<<   node1.getvalue(n)  <<endl;
+        // we clone the input nodes
+		for (int i = 0; i < nodes.size(); i++) {
+			nodes_random_single.push_back(nodes.at(i)->clone());
+			nodes_random_multi.push_back(nodes.at(i)->clone());
+			nodes_sorted_single.push_back(nodes.at(i)->clone());
+			nodes_sorted_multi.push_back(nodes.at(i)->clone());
 		}
 
-		//--------------------------------------------------------------------------------------------------------------------------
-		// 12: Set the pH of the input 
-		//--------------------------------------------------------------------------------------------------------------------------
-		node1.setValue(indx_pH, 7.0);
-		node1.setValue(indx_pe, 7.0);
-
-		//--------------------------------------------------------------------------------------------------------------------------
-		// 13: and perform a calculation on this node	
-		//--------------------------------------------------------------------------------------------------------------------------
-		bool success = false;
-		try {
-			success = calculator.calculate(&node1, stopFlag);
-		}
-		catch (OrchestraException  e)
-		{   // If the calculation fails, an exception is thrown
-			IO::showMessage("Something went wrong trying to calculate a node: " + string(e.what()));
-		}
-		//--------------------------------------------------------------------------------------------------------------------------
-
-		//--------------------------------------------------------------------------------------------------------------------------
-		// 14: write output for all node variables after calculation
-		//--------------------------------------------------------------------------------------------------------------------------
-		if (success) {
-			cout << "The first ORCHESTRA calculation succeeded!" << endl;
-			for (int n = 0; n < nodeType.getNrVars(); n++) {
-				cout << n << " : " << nodeType.getName(n) << " : " << node1.getvalue(n) << endl;
-			}
-		}
-		else 
-		{
-			cout << "Sorry, for some reason the first ORCHESTRA calculation was not successful!" << endl;
-		}
+		// we sort 2 of the 4 sets on one of the input variables
+		single.sortNodes(&nodes_sorted_single, "CaO");
+		single.sortNodes(&nodes_sorted_multi, "CaO");
 
 
+		FileWriter* report = fileBasket.getFileWriter(&fileBasket, "report.txt");
+
+		// this will report the nr of logical processors, which may be double the number of physical processors in case of hyperthreading 
+		int nrThreads = std::thread::hardware_concurrency();
+
+		report->write("#\n# DONUT Machine Learning Benchmark:  calculation times with a traditional chemical solver.\n");
+		report->write("# (ORCHESTRA C++ version as developed within DONUT project)\n#\n");
+		report->write("# Calculation times of a chemical solver depend very strongly on the number of iterations required to solve a system,\n");
+		report->write("# which in turn is very sensitive to the accuracy of the start estimations.\n");
+		report->write("# This benchmark demonstrates this by performing a series calculations of random (unrelated) and related (sorted) chemical systems.\n");		
+		report->write("# In both cases, the results of a the previous calculation are used as start estimation for a new one.\n#\n");
+		report->write("# For ordered sets the results of a previous calculation are a better start estimation for a new calculation than for random sets,\n# resulting in less required iterations and faster calculation times for ordered sets.\n#\n");
+		report->write("# For transport systems usually the results of the previous time step (for each cell or node) are used as start estimations.\n");
+		report->write("# These estimations are typically very good, as changes between time steps are small, (or even no changes in large part of the system). \n\n");
+		report->write("# For that reason, the performance of a chemical solver in transport systems is likely to be closer to the results for warm start conditions, than those for random input. \n");
+		report->write("# \n");	
+		report->write("# This benchmark furthermore demonstrates the efficiency of parallel calculations on systems with multiple processors / calculation cores.\n");
+		report->write("# Note that especially on laptop computers, processor speeds are often reduced when all cores are used to reduce power consumption and heat production.\n");		
+		report->write("# This results in less than linear scaling of calculation speed with number of processors/threads.\n#\n");
+		report->write("# Hans Meeussen, 21 August 2023.\n#\n");
+
+		
+		int iterindex = nodeType.index("tot_nr_iter");
 
 
 		//--------------------------------------------------------------------------------------------------------------------------
-		// Below are just some examples of different ways to perform multiple calculations on single or series of nodes 
-		//
+		// 15: Now we can perform the different runs and write the results to screen and report.txt file
 		//--------------------------------------------------------------------------------------------------------------------------
 
-		if (false) { // just to switch this off temporarily
-//	    //	 just perform a series of calculations (1000) with a range of pH's
-//		try {
-//	
-//			for (double pH = 7.0; pH <= 10; pH = pH + (3.0 / 1000.0)) {
-//			    node1.setValue(indx_pH, pH);
-//			    success = calculator.calculate(&node1, stopFlag);
-//				cout<<".";
-//		    }
-//
-//		}
-//		catch (OrchestraException  e)
-//		{   // If the calculation fails, an exception is thwn
-//			IO::showMessage("Something went wrong trying to calculate a node: " + string(e.what()));
-//		}
-//		//--
-			//--------------------------------------------------------------------------------------------------------------------------
-			// 15: Now we show how to calculate a larger sets of nodes in different ways
-			//     comment out one of the following methods and compare
-			//--------------------------------------------------------------------------------------------------------------------------
-			int nrcalc = 0;
-			int totnriter = 0;
 
-			// we create 3 sets of nodes copies
-			std::vector<Node*>* theNodes = new std::vector<Node*>;
-			std::vector<Node*>* theNodes2 = new std::vector<Node*>;
-			std::vector<Node*>* theNodes3 = new std::vector<Node*>;
+		//test::t(string name, vector<Node*>*nodes, NodeProcessor * np, FileWriter * report, FileBasket fileBasket, ParameterList * outputVariableNames, vector<int>*outputIndx, memoryOption, writeResults) {
+		test("single_thread_random", &nodes_random_single, &single, report, fileBasket, &outputVariableNames, &outputIndx, 1, true);
+		test("single_thread_sorted", &nodes_sorted_single, &single, report, fileBasket, &outputVariableNames, &outputIndx, 1, true);
+		test(to_string(nrThreads) + "_threads_random", &nodes_random_multi, &multi, report, fileBasket, &outputVariableNames, &outputIndx, 1, true);
+		test(to_string(nrThreads) + "_threads_sorted", &nodes_sorted_multi, &multi, report, fileBasket, &outputVariableNames, &outputIndx, 1, true);
 
-			// construct 3 x 40.000 new nodes and give each node a different pH
-			double pH = 8.0;
-			//for (double pH = 4.0; pH < 8.0; pH = pH + 1.0e-4) {
-			for (double Ca = 1e-4; Ca < 1; Ca = Ca + 1e-4) { // 10.000 nodes
+		report->write("# \n");
+		report->write("# Now we redo the calculations to demonstrate the effect of a warm start with very good start estimations\n");
+		report->write("# The performance of a solver for transport systems is typically closer to the results for warm start conditions, than those for random input.\n");
+		report->write("# We expect no significant difference anymore between ordered / non ordered as for each cell the conditions of the previous calculations for this cell are used.\n");
+		report->write("# Because the calculations will now(most likely) be much faster than the previous ones, the overhead of multi threading is relatively more important.\n");
+		report->write("# Good scaling of calculation speed with number of threads indicates low overhead of multithreading.\n");
+		report->write("# \n");
 
-				Node* tmpNode = node1.clone();  // we copy the first node
+		// we do not write output and memoryoption == 0, which implies that we use the results of the previous calcultion for this node as start estimation
+		test("single_thread_random", &nodes_random_single, &single, report, fileBasket, &outputVariableNames, &outputIndx, 0, false);
+		test("single_thread_sorted", &nodes_sorted_single, &single, report, fileBasket, &outputVariableNames, &outputIndx, 0, false);
+		test(to_string(nrThreads) + "_threads_random", &nodes_random_multi, &multi, report, fileBasket, &outputVariableNames, &outputIndx, 0, false);
+		test(to_string(nrThreads) + "_threads_sorted", &nodes_sorted_multi, &multi, report, fileBasket, &outputVariableNames, &outputIndx, 0, false);
 
-				tmpNode->setValue(indx_Ca, Ca); // 			
-				tmpNode->setValue(indx_pH, pH); // and set the pH at a new value
-
-				// add node copies to all 3 node sets, so we get 3 identical sets of nodes
-				theNodes->push_back(tmpNode);
-				theNodes2->push_back(tmpNode->clone());
-				//theNodes3->push_back(tmpNode->clone());
-			}
-
-			// we also make a smaller set of 100 nodes, to calculate this 100 times and compare with 10000 nodes in one set
-			for (double Ca = 1e-4; Ca < 1; Ca = Ca + 1e-2) { //100 nodes
-
-				Node* tmpNode = node1.clone();  // we copy the first node
-
-				tmpNode->setValue(indx_Ca, Ca); // 			
-				tmpNode->setValue(indx_pH, pH); // and set the pH at a new value
-				theNodes3->push_back(tmpNode->clone());
-			}
-
-			//--------------------------------------------------------------------------------------------------------------------------
-			// A: simply calculate all nodes sequentially as independent nodes
-			//--------------------------------------------------------------------------------------------------------------------------
-			auto t0 = high_resolution_clock::now();
-
-			for (int n = 0; n < theNodes->size(); n++) {
-				calculator.calculate(theNodes->at(n), stopFlag);
-				totnriter += (int)theNodes->at(n)->getvalue(indx_nriter); // we add the number of iterations and add this to the total number of iterations
-			}
-
-			auto t1 = high_resolution_clock::now();
-			auto duration = duration_cast<milliseconds>(t1 - t0).count();
-			cout << "A: Sequential number of calculations: " << theNodes->size() << " Total nr iterations: " << totnriter << "  time: " << duration << "msec" << endl;
-
-			//--------------------------------------------------------------------------------------------------------------------------
-			// B: calculate all nodes sequentially, but making use of results of previous node as start estimation for the next one.
-			// This is often useful for initializing large systems with many related nodes
-			//--------------------------------------------------------------------------------------------------------------------------
-			t0 = high_resolution_clock::now();
-			totnriter = 0;
-
-			for (int n = 0; n < theNodes2->size(); n++) {
-				if (n > 0) {
-					calculator.copyUnknowns(theNodes2->at(n - 1), theNodes2->at(n));
-				}
-				calculator.calculate(theNodes2->at(n), stopFlag);
-				totnriter += (int)theNodes2->at(n)->getvalue(indx_nriter);
-			}
-
-			t1 = high_resolution_clock::now();
-			duration = duration_cast<milliseconds>(t1 - t0).count();
-			cout << "B: Sequential number of calculations: " << theNodes->size() << " Total nr iterations: " << totnriter << "  time: " << duration << "msec" << endl;
-
-			//--------------------------------------------------------------------------------------------------------------------------
-			// C: Repeat calculations, so nodes are already in equilibrium
-			//--------------------------------------------------------------------------------------------------------------------------
-			t0 = high_resolution_clock::now();
-			totnriter = 0;
-
-			for (int n = 0; n < theNodes2->size(); n++) {
-				calculator.calculate(theNodes2->at(n), stopFlag);
-				totnriter += (int)theNodes2->at(n)->getvalue(indx_nriter);
-			}
-
-			t1 = high_resolution_clock::now();
-			duration = duration_cast<milliseconds>(t1 - t0).count();
-			cout << "C: Sequential number of calculations: " << theNodes->size() << " Total nr iterations: " << totnriter << "  time: " << duration << "msec" << endl;
+		report->write("# \n");
+		report->write("# Now we do this again to check reproducibility...\n");
+		report->write("# \n");
 
 
-			//--------------------------------------------------------------------------------------------------------------------------
+		test("single_thread_random", &nodes_random_single, &single, report, fileBasket, &outputVariableNames, &outputIndx, 0, false);
+		test("single_thread_sorted", &nodes_sorted_single, &single, report, fileBasket, &outputVariableNames, &outputIndx, 0, false);
+		test(to_string(nrThreads) + "_threads_random", &nodes_random_multi, &multi, report, fileBasket, &outputVariableNames, &outputIndx, 0, false);
+		test(to_string(nrThreads) + "_threads_sorted", &nodes_sorted_multi, &multi, report, fileBasket, &outputVariableNames, &outputIndx, 0, false);
 
-			// Calculate independent nodes in parallel threads using the parallel node processor
-			// The NodeProcessor will make and use internal independent copies of the calculator for each thread
-			// Initialize the NodeProcessor, this needs to happen once. (and is relatively slow)
-			// After that, the processNodes() method can be called repeatedly (and is relatively fast)
-			NodeProcessor np(&calculator, 8, stopFlag, theNodes); // 8 threads
+		report->close();
 
-			t0 = high_resolution_clock::now();
-
-			// process the nodes in parallel, can be used repeatedly
-			for (int m = 0; m < 100; m++) {
-				np.processNodes(theNodes3);
-			}
-
-			t1 = high_resolution_clock::now();
-
-			duration = duration_cast<milliseconds>(t1 - t0).count();
-			cout << "D: Parallel number of calculations: " << theNodes3->size() << "  time: " << duration << "msec" << endl;
-
-
-
-			// process the nodes in parallel, can be used repeatedly so do it again
-			// this will be quite fast, as nodes are already equilibrated once
-			t0 = high_resolution_clock::now();
-			for (int m = 0; m < 100; m++) {
-				np.processNodes(theNodes3);
-			}
-
-			t1 = high_resolution_clock::now();
-			duration = duration_cast<milliseconds>(t1 - t0).count();
-			cout << "E: repeat parallel number of calculations: " << theNodes3->size() << "  time: " << duration << "msec" << endl;
-
-
-
-			t0 = high_resolution_clock::now();
-			for (int m = 0; m < 100; m++) {
-				np.processNodes(theNodes3);
-			}
-
-			t1 = high_resolution_clock::now();
-			duration = duration_cast<milliseconds>(t1 - t0).count();
-			cout << "F: repeat parallel number of calculations: " << theNodes3->size() << "  time: " << duration << "msec" << endl;
-
-
-
-			t0 = high_resolution_clock::now();
-			for (int m = 0; m < 100; m++) {
-				np.processNodes(theNodes3);
-			}
-
-			t1 = high_resolution_clock::now();
-			duration = duration_cast<milliseconds>(t1 - t0).count();
-			cout << "G: repeat parallel number of calculations: " << theNodes3->size() << "  time: " << duration << "msec" << endl;
-
-
-			t0 = high_resolution_clock::now();
-			//for (int m = 0; m < 100; m++) {
-			np.processNodes(theNodes2);
-			//
-
-			t1 = high_resolution_clock::now();
-			duration = duration_cast<milliseconds>(t1 - t0).count();
-			cout << "H: repeat parallel number of calculations: " << theNodes3->size() << "  time: " << duration << "msec" << endl;
-		}
 	}
 	catch (const IOException &e)
 	{
@@ -399,4 +415,5 @@ int main()
 	return 0;
 
 } 
+
 

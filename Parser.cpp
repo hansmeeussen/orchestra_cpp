@@ -724,12 +724,12 @@ namespace orchestracpp
 			return NumberNode::createNumberNode(evaluate(),parser);
 		}
 
-		if (left->constant() && (left->evaluate() == 0))
+		if (left->constant() && (left->evaluate() == 0.0))
 		{
 			return NumberNode::createNumberNode(0.0,parser);
 		}
 
-		if (right->constant() && (right->evaluate() == 1))
+		if (right->constant() && (right->evaluate() == 1.0))
 		{
 			return left;
 		}
@@ -887,6 +887,14 @@ namespace orchestracpp
 		if (left->constant())
 		{
 			double leftvalue = left->evaluate();
+			if (leftvalue == 0.0)
+			{
+				return NumberNode::createNumberNode(0.0, parser);
+			}
+			if (leftvalue == 1.0)
+			{
+				return NumberNode::createNumberNode(1.0, parser);
+			}
 			if (leftvalue == 10.0)
 			{
 				ExpressionNode * tempNode = parser->newNode(new Power10Node(right));
@@ -906,12 +914,17 @@ namespace orchestracpp
 				return NumberNode::createNumberNode(1.0,parser);
 			}
 
-			if (rightvalue == 1)
+			if (rightvalue == 1.0)
 			{
 				return left;
 			}
 
-			if (rightvalue == -1)
+			if (rightvalue == 2.0)
+			{
+				return parser->newNode(new SqrNode(left));
+			}
+
+			if (rightvalue == -1.0)
 			{
 				ExpressionNode * tempNode = parser->newNode(new DivideNode(NumberNode::createNumberNode(1.0, parser), left));
 				return tempNode->optimize(parser);
@@ -1079,6 +1092,15 @@ namespace orchestracpp
 			return NumberNode::createNumberNode(evaluate(), parser);
 		}
 		return this;
+	}
+
+	SqrNode::SqrNode(ExpressionNode* child) : Function1Node(child)
+	{
+	}
+
+	double SqrNode::evaluate()
+	{
+		return std::pow(child->evaluate(),2);
 	}
 
 	SqrtNode::SqrtNode(ExpressionNode *child) : Function1Node(child)

@@ -25,7 +25,7 @@ namespace orchestracpp
 		// or can we create one that is large enough once?
 		if (activeUneqs.empty())
 		{
-			activeUneqs = std::vector<UnEq*>(uneqs.size() + 1); // maximum number of active uneqs
+			activeUneqs.resize(uneqs.size() + 1);
 		}
 
 		// Create the list of active uneqs
@@ -92,10 +92,21 @@ namespace orchestracpp
 		uneqs.push_back(doesExist(UnEq::createUnEq3(infile, variables)));
 	}
 
+ /**
+  * This is the top level iteration method that is called from the calculator
+  * and manages the iteration process the calculate method of the calculator
+  * is used as a call-back method to perform a single calculation in the
+  * iteration process.
+  *
+  * iterate
+  *     iteratelevelminerals
+  *         iteratelevel0
+  */
+
 	bool UnEqGroup::iterate(StopFlag *flag)
 	{
 		originalMaxIter = maxIter;
-		totalNrIter = 0;
+		totalNrIter = 1;
 
 		try
 		{
@@ -302,7 +313,7 @@ namespace orchestracpp
 					{
 						if (flag->cancelled)
 						{ // direct access of volatile variable is faster
-							nrIter = maxIter;
+							nrIter0 = maxIter;
 							break;
 						}
 					} 

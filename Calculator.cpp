@@ -225,7 +225,6 @@ namespace orchestracpp
 		{
 			uneqs->read_one3(s);
 		}
-
 	}
 
 	bool Calculator::calculate2(Node* const node, StopFlag* flag) //throw(ReadException, ParserException, ExitException)
@@ -533,7 +532,8 @@ namespace orchestracpp
 			IO::print(StringHelper::toString((double)duration / 1000.0));	IO::println(" sec.");
 
 			//variables->initializeParentsArrays(); Not necessary in C++
-			IO::println(std::to_string(variables->getNrVariables()) + " variables, " + std::to_string(expressions->nrExpressions) + " expressions, " + std::to_string(uneqs->nrActiveUneqs) + " equations.");
+		//	IO::println(std::to_string(variables->getNrVariables()) + " variables, " + std::to_string(expressions->nrExpressions) + " expressions, " + std::to_string(uneqs->nrActiveUneqs) + " equations.");
+			IO::println(std::to_string(variables->getNrVariables()) + " variables, " + std::to_string(expressions->nrExpressions) + " expressions, " + std::to_string(uneqs->uneqs.size()) + " equations.");
 			optimized = true;
 		}
 

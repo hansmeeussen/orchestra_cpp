@@ -530,6 +530,19 @@ namespace orchestracpp
 	//    }
 	}; //-----------------------------------------------------------------------------------------
 
+	class SqrNode final : public Function1Node
+	{ //----------------------------------------------
+
+	public:
+		SqrNode(ExpressionNode* child);
+
+		double evaluate() override;
+
+		//    public String toString() {
+		//        return ("sqrt(" + child.toString() + ")");
+		//    }
+	}; //-----------------------------------------------------------------------------------------
+
 	class LogNode final : public Function1Node
 	{
 

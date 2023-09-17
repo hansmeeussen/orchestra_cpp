@@ -26,7 +26,7 @@ namespace orchestracpp
 
 			// perform a first calculation on an equilibrated node
 			// this is useful for benchmarking different methods, as the first calculation
-			// for each calcultor is slow because of initialisation
+			// for each calculator is slow because of initialisation
 			tmpCalculator->calculate(nodes->at(0), sf);
 
 			calculators.push_back(tmpCalculator);
@@ -35,11 +35,10 @@ namespace orchestracpp
 		waitforprocessing = true;
 
 		// set up and start the threads
-		for (int n = 0; n < nrThreads; n++) {
+		for (int n = 0; n < this->nrThreads; n++) {
 			// documentation https://thispointer.com/c11-start-thread-by-member-function-with-arguments/
 			threads.push_back(new std::thread(&NodeProcessor::runf, this, calculators.at(n)));
 		}
-
 
 	}
 
@@ -68,6 +67,44 @@ namespace orchestracpp
 
 		}
 
+	}
+
+
+
+	int NodeProcessor::partition(vector<Node*>* nodes, int low, int high) {
+		// we take the element at high index as pivot
+		double  pivot = nodes->at(high)->getvalue(sort_indx);
+
+		int i = low; // Index of smaller element 
+
+		for (int j = low; j <= high - 1; j++) {
+			// we swap all elements that are smaller than the pivot
+			if (nodes->at(j)->getvalue(sort_indx) < pivot) {
+				swap(i, j, nodes);
+				i++; 
+			}
+		}
+		swap(i, high, nodes);
+		return (i);
+	}
+
+	void NodeProcessor::quickSort(vector<Node*>* nodes, int low, int high) {
+		if (low < high) {
+			int pi = partition(nodes, low, high);
+			quickSort(nodes, low, pi - 1);
+			quickSort(nodes, pi + 1, high);
+		}
+	}
+
+	void NodeProcessor::swap(int from, int to, vector<Node*>* nodes) {
+		Node* tmp = nodes->at(from);
+		nodes->at(from) = nodes->at(to);
+		nodes->at(to) = tmp;
+	}
+
+	void NodeProcessor::sortNodes(vector<Node*>* nodes, string variableName) {
+		sort_indx = nodes->at(0)->nodeType->index(variableName);
+		quickSort(nodes, 0, nodes->size() - 1);
 	}
 
 	//we return nullPtr when all nodes are processed

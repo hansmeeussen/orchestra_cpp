@@ -3,6 +3,7 @@
 #include <condition_variable>
 #include <thread>
 #include <mutex>
+//#include <experimental/random>
 
 //#include "NodeType.h"
 #include "Node.h"
@@ -33,6 +34,8 @@ namespace orchestracpp
 		atomic_bool quit = false;
 		int memoryOption = 0; // 0 = no memory, so use previous node value (transport),  1 = use previous succesful node  (serial calculation, transport intialize)
 
+		int sort_indx;
+
 	public:
 	
 		~NodeProcessor() { // Delete all the created calculators
@@ -57,13 +60,20 @@ namespace orchestracpp
 
 		void pleaseStop();
 
-	private:
+		void sortNodes(vector<Node*>* nodes, string variableName);
 
+		int partition(vector<Node*>* nodes, int low, int high);	
+		
+		void swap(int from, int to, vector<Node*>* nodes);
+
+		void quickSort(vector<Node*>* nodes, int low, int high);
+
+
+	private:
 
 		Node* getNextNode();
 
 		void runf(Calculator* c);
-
 
 	};
 }
