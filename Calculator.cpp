@@ -519,10 +519,10 @@ namespace orchestracpp
 		if (!optimized)
 		{
 			//long long starttime = System::currentTimeMillis();
-			auto t0 = high_resolution_clock::now();
+			auto t0 = high_resolution_clock::now();			
 			uneqs->initialise();
 			IO::println("Parsing expressions of " + name->name + "..... ");
-			expressions->initialize();
+			int nrExpressions = expressions->initialize();
 			IO::print("Optimizing expressions of " + name->name + "..... ");
 			
 			variables->optimizeExpressions(expressions->parser);
@@ -532,8 +532,8 @@ namespace orchestracpp
 			IO::print(StringHelper::toString((double)duration / 1000.0));	IO::println(" sec.");
 
 			//variables->initializeParentsArrays(); Not necessary in C++
-		//	IO::println(std::to_string(variables->getNrVariables()) + " variables, " + std::to_string(expressions->nrExpressions) + " expressions, " + std::to_string(uneqs->nrActiveUneqs) + " equations.");
-			IO::println(std::to_string(variables->getNrVariables()) + " variables, " + std::to_string(expressions->nrExpressions) + " expressions, " + std::to_string(uneqs->uneqs.size()) + " equations.");
+		//	IO::println(std::to_string(variables->getNrVariables()) + " variables, " + std::to_string(nrExpressions) + " expressions, " + std::to_string(uneqs->nrActiveUneqs) + " equations.");
+			IO::println(std::to_string(variables->getNrVariables()) + " variables, " + std::to_string(nrExpressions) + " expressions, " + std::to_string(uneqs->uneqs.size()) + " equations.");
 			optimized = true;
 		}
 
@@ -577,4 +577,9 @@ namespace orchestracpp
 		return variables->getVariableNames();
 	}
 
+	void Calculator::addGlobalVariables(std::vector<std::string>* globalVariables) {
+		for (auto name : *globalVariables) {
+			variables->addToGlobalVariables(name);
+		}
+	}
 }

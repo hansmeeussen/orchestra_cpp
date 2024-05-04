@@ -99,7 +99,7 @@ void test(string name, vector<Node*>* nodes, NodeProcessor* np, FileWriter* repo
 
 
 	// write result to report file and screen
-	string result = (name+": \t" + to_string(nodes->size()) + " nodes,   calculation time: " + to_string(duration) + " msec,  Calculations/sec:  " + to_string(nodes->size() * 1000 / duration) + " Total number of iterations: " + to_string(tot_nr_iter) + "\n");
+	string result = (name + ": \t" + to_string(nodes->size()) + " nodes,   calculation time: " + to_string(duration) + " msec,  Calculations/sec:  " + to_string(nodes->size() * 1000 / duration) + " Total number of iterations: " + to_string(tot_nr_iter) + "\n");
 	cout << result;
 	report->write(result);
 
@@ -118,7 +118,9 @@ void test(string name, vector<Node*>* nodes, NodeProcessor* np, FileWriter* repo
 		// write data
 		for (int n = 0; n < nodes->size(); n++) {
 			for (int i = 0; i < outputIndx->size(); i++) {
-				fw->write(StringHelper::toString(nodes->at(n)->getvalue(outputIndx->at(i))));
+				//				fw->write(StringHelper::toString(nodes->at(n)->getvalue(outputIndx->at(i))));
+				fw->write(StringHelper::doubleToString(nodes->at(n)->getvalue(outputIndx->at(i)), 12));
+				//fw->write(nodes->at(n)->getvalue(outputIndx->at(i)));
 				fw->write("\t");
 			}
 			fw->write("\n");
@@ -138,7 +140,7 @@ int main()
 
 	try {
 
-		IO::println("**** ORCHESTRA C++ chemical solver demonstration program, Version July 2023 ");
+		IO::println("**** ORCHESTRA C++ chemical solver demonstration program, Version Januari 2024 ");
 
 		//--------------------------------------------------------------------------------------------------------------------------
 		// 1: First we create a NodeType object
@@ -147,8 +149,8 @@ int main()
 		NodeType nodeType;
 
 		//--------------------------------------------------------------------------------------------------------------------------
-        // 2: Then we create a FileBasket object which regulates all file IO
-        //--------------------------------------------------------------------------------------------------------------------------
+		// 2: Then we create a FileBasket object which regulates all file IO
+		//--------------------------------------------------------------------------------------------------------------------------
 		FileBasket fileBasket;
 
 		//--------------------------------------------------------------------------------------------------------------------------
@@ -156,29 +158,29 @@ int main()
 		//    Default the current folder is used, but this may depend on the operating system.
 		//--------------------------------------------------------------------------------------------------------------------------
 		//fileBasket.workingDirectory = "..\\hpx"; // place your workingdirectory here
-        //fileBasket.workingDirectory = "C:\\Users\\jmeeussen\\Desktop\\visualC\\testorchestra2\\testorchestra2\\hpx"; // place your workingdirectory here
+		//fileBasket.workingDirectory = "C:\\Users\\jmeeussen\\Desktop\\visualC\\testorchestra2\\testorchestra2\\hpx"; // place your workingdirectory here
 
 		//--------------------------------------------------------------------------------------------------------------------------
 		// 4:  We create a FileID, using the filebasket,  to open a chemistry inputfile for the solver
 		//--------------------------------------------------------------------------------------------------------------------------
-		FileID fileID(&fileBasket,  "chemistry1.inp");
+		FileID fileID(&fileBasket, "chemistry1.inp");
 		//FileID fileID2(&fileBasket, "convertInput.inp"); 
 
 		//--------------------------------------------------------------------------------------------------------------------------
-        // 5: Now we can construct a calculator (solver) object from this input file
+		// 5: Now we can construct a calculator (solver) object from this input file
 		//    We can have multiple different calculators if necessary (e.g. to calculate different boundary conditions, 
 		//    or to convert input value)
-        //--------------------------------------------------------------------------------------------------------------------------
+		//--------------------------------------------------------------------------------------------------------------------------
 		Calculator calculator(&fileID);
 		//Calculator calculator(new FileID(&fileBasket, "chemistry1.inp"));
 		//Calculator convertInput(&fileID2);// a calculator to perform initial calculations
 
 		//--------------------------------------------------------------------------------------------------------------------------
-        // 5a: Standard the complete definition of the chemical system is read from the chemistry input file, but it is possible to 
+		// 5a: Standard the complete definition of the chemical system is read from the chemistry input file, but it is possible to 
 		//    add some additional text to the chemistry file (e.g. containing extra calculations) which we can provide in an extra string.
 		//    This string is inserted at the start of the text of the chemical input file. 
 		//    Used by HPX
-        //--------------------------------------------------------------------------------------------------------------------------
+		//--------------------------------------------------------------------------------------------------------------------------
 		//std::string extratext("@class: hpxtxt(){@Globalvar: hpxpipi 3.14}");
 		//Calculator calculator(&fileID, extratext); // providing addtional text
 
@@ -195,10 +197,10 @@ int main()
 
 
 		string line;
-        // skip initial comment lines
+		// skip initial comment lines
 		do {
 			line = StringHelper::trim(inputReader->readLine());
-		} while (StringHelper::startsWith(line, "#")||(line.size()<1));
+		} while (StringHelper::startsWith(line, "#") || (line.size() < 1));
 
 
 		// read the line with input variable names in the column headers
@@ -251,10 +253,23 @@ int main()
 		// 
 		//    In this way we have defined all variables that are stored in each node.
 		//--------------------------------------------------------------------------------------------------------------------------
-		nodeType.useGlobalVariablesFromCalculator(&calculator);
+		//nodeType.useGlobalVariablesFromCalculator(&calculator);
 		//nodeType.useGlobalVariablesFromCalculator(&convertInput);
 
-	    //--------------------------------------------------------------------------------------------------------------------------
+
+		//nodeType.readGlobalVariablesFromOutputFile(fileBasket, "output.dat");
+		nodeType.readGlobalVariablesFromOutputFile(&fileBasket, "output.dat");
+
+		//&calculator.addGlobalVariables(nodeType.outputvariables);
+		calculator.addGlobalVariables(&nodeType.outputVariables);
+
+		nodeType.useGlobalVariablesFromCalculator(&calculator);
+
+		//nodeType.readGlobalVariablesFromInputFile(fileBasket, "input.dat");
+		//nodeType.readGlobalVariablesFromFile(&fileBasket, "input.dat");
+
+
+		//--------------------------------------------------------------------------------------------------------------------------
 		// 9: Now we can add the input and output variables to the nodeType 
 		//    The "false" parameter indicates that each node has an individual value for this variable 
 		//    This in contrast with "true" which indicates static variables of which there is a single copy for all nodes (e.g. time or timestep etc.)
@@ -265,9 +280,9 @@ int main()
 		}
 
 		// do the same for output variables
-		for (int n = 0; n < outputVariableNames.size(); n++) {
-			nodeType.addVariable(outputVariableNames.get(n), 0, false, "output.dat");
-		}
+		//for (int n = 0; n < outputVariableNames.size(); n++) {
+		//	nodeType.addVariable(outputVariableNames.get(n), 0, false, "output.dat");
+		//}
 		//--------------------------------------------------------------------------------------------------------------------------
 
 		//--------------------------------------------------------------------------------------------------------------------------
@@ -284,8 +299,8 @@ int main()
 		}
 
 		//--------------------------------------------------------------------------------------------------------------------------
-        // 11: For fast access to node variables we create integer indices to them
-        //--------------------------------------------------------------------------------------------------------------------------
+		// 11: For fast access to node variables we create integer indices to them
+		//--------------------------------------------------------------------------------------------------------------------------
 		// we do this for input..
 		vector<int> inputIndx;
 		for (int n = 0; n < inputVariableNames.size(); n++) {
@@ -314,8 +329,8 @@ int main()
 		// 13: Now we create 2 so-called nodeProcessors, the first one to perform single thread calculations,
 		//     the second one to perform parallel multi threaded calculations
 		//--------------------------------------------------------------------------------------------------------------------------
-		
-        // we also need a stopflag, which can be used to stop long running calculations running in the background in e.g. interactive calculations (not used here)
+
+		// we also need a stopflag, which can be used to stop long running calculations running in the background in e.g. interactive calculations (not used here)
 		StopFlag* stopFlag = new StopFlag();
 		//stopFlag->pleaseStop("demo program line 266");// this is how we can stop all running calculators
 
@@ -328,7 +343,7 @@ int main()
 		vector<Node*> nodes_sorted_single;
 		vector<Node*> nodes_sorted_multi;
 
-        // we clone the input nodes
+		// we clone the input nodes
 		for (int i = 0; i < nodes.size(); i++) {
 			nodes_random_single.push_back(nodes.at(i)->clone());
 			nodes_random_multi.push_back(nodes.at(i)->clone());
@@ -337,8 +352,19 @@ int main()
 		}
 
 		// we sort 2 of the 4 sets on one of the input variables
-		single.sortNodes(&nodes_sorted_single, "CaO");
-		single.sortNodes(&nodes_sorted_multi, "CaO");
+		std::string sortName;
+
+		if (nodeType.index("CaO") > 1) {
+			sortName = "CaO";
+		}
+		else if (nodeType.index("acidbase") > 1) {
+			sortName = "acidbase";
+		}
+		else {
+			sortName = nodeType.getName(0);
+		}
+		single.sortNodes(&nodes_sorted_single, sortName);
+		single.sortNodes(&nodes_sorted_multi, sortName);
 
 
 		FileWriter* report = fileBasket.getFileWriter(&fileBasket, "report.txt");
@@ -350,19 +376,19 @@ int main()
 		report->write("# (ORCHESTRA C++ version as developed within DONUT project)\n#\n");
 		report->write("# Calculation times of a chemical solver depend very strongly on the number of iterations required to solve a system,\n");
 		report->write("# which in turn is very sensitive to the accuracy of the start estimations.\n");
-		report->write("# This benchmark demonstrates this by performing a series calculations of random (unrelated) and related (sorted) chemical systems.\n");		
+		report->write("# This benchmark demonstrates this by performing a series calculations of random (unrelated) and related (sorted) chemical systems.\n");
 		report->write("# In both cases, the results of a the previous calculation are used as start estimation for a new one.\n#\n");
 		report->write("# For ordered sets the results of a previous calculation are a better start estimation for a new calculation than for random sets,\n# resulting in less required iterations and faster calculation times for ordered sets.\n#\n");
 		report->write("# For transport systems usually the results of the previous time step (for each cell or node) are used as start estimations.\n");
 		report->write("# These estimations are typically very good, as changes between time steps are small, (or even no changes in large part of the system). \n\n");
 		report->write("# For that reason, the performance of a chemical solver in transport systems is likely to be closer to the results for warm start conditions, than those for random input. \n");
-		report->write("# \n");	
+		report->write("# \n");
 		report->write("# This benchmark furthermore demonstrates the efficiency of parallel calculations on systems with multiple processors / calculation cores.\n");
-		report->write("# Note that especially on laptop computers, processor speeds are often reduced when all cores are used to reduce power consumption and heat production.\n");		
+		report->write("# Note that especially on laptop computers, processor speeds are often reduced when all cores are used to reduce power consumption and heat production.\n");
 		report->write("# This results in less than linear scaling of calculation speed with number of processors/threads.\n#\n");
-		report->write("# Hans Meeussen, 21 August 2023.\n#\n");
+		report->write("# Hans Meeussen, 24 Januari 2024.\n#\n");
 
-		
+
 		int iterindex = nodeType.index("tot_nr_iter");
 
 
@@ -404,16 +430,16 @@ int main()
 		report->close();
 
 	}
-	catch (const IOException &e)
+	catch (const IOException& e)
 	{
 		cout << e.what() << endl;
 	}
 
- 	catch (const OrchestraException &e) {
+	catch (const OrchestraException& e) {
 		cout << e.what() << endl;
 	}
 	return 0;
 
-} 
+}
 
 

@@ -191,6 +191,34 @@ namespace orchestracpp
 		}
 	}
 
+	void NodeType::readGlobalVariablesFromOutputFile(FileBasket* fileBasket, const std::string& filename)// throw(IOException)
+	{
+		// we have to use an expanding filereader here, to include variables in include files and objects etc.
+		FileID tempVar(fileBasket, filename);
+		OrchestraReader ifile = *OrchestraReader::getExpandingFileReader(&tempVar);
+
+		ifile.stripComment = true;
+
+		while (!ifile.ready)
+		{
+			// read line into parameterlist
+
+			ParameterList parameterList(ifile.readLine());
+
+			for (int n = 0; n < parameterList.size(); n++) {
+				std::string name = parameterList.get(n);
+
+				if (StringHelper::toLower(name) != "var:") {
+					// we should check whether outputVariables already contains name
+					outputVariables.push_back(name);
+				}
+
+			}
+		}
+	}
+
+
+
 	void NodeType::useAllGlobalFileVariables(std::vector<std::string> filenames, FileBasket *fileBasket)// throw(ReadException)
 	{
 

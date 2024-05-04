@@ -24,8 +24,8 @@ namespace orchestracpp
 	 */
 	class ExpressionGraph
 	{
-   public:
-	   VarGroup *variables;
+    public:
+	   //VarGroup *variables;
 
 	   // a vector of expression string pointers
 	   //std::vector<ExpressionString*> expressionStack[5]; // = new std::vector<std::string*>[5];
@@ -52,12 +52,12 @@ namespace orchestracpp
 
 	   virtual void addExpression(char stage, ExpressionString *expression) /*throw(ParserException)*/;
 
-	   int nrExpressions = 0;
+	   //int nrExpressions = 0;
 
 	   /**
 	    * Add the expressions in the correct order to the expressionGraph
 	    */
-	   virtual void initialize()/* throw(ParserException)*/;
+	   virtual int initialize()/* throw(ParserException)*/;
 
 	};
 }

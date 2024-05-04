@@ -11,7 +11,7 @@ namespace orchestracpp
 
 	ExpressionGraph::ExpressionGraph(VarGroup *variables)// throw(IOException)
 	{
-	   this->variables = variables;
+	   //this->variables = variables;
 	   parser = new Parser(variables);
 
 	}
@@ -59,7 +59,7 @@ namespace orchestracpp
 
 	void ExpressionGraph::addExpression(char stage, ExpressionString *expression)// throw(ParserException)
 	{
-	   nrExpressions++;
+	   //nrExpressions++;
 	   switch (stage)
 	   {
 		  case '1':
@@ -95,9 +95,9 @@ namespace orchestracpp
 	   }
 	}
 
-	void ExpressionGraph::initialize()// throw(ParserException)
+	int ExpressionGraph::initialize()// throw(ParserException)
 	{
-	   nrExpressions = 0;
+	   int nrExpressions = 0;
 
 	   for (auto const &exp : stage1exp) {
 		   parser->addExpression(exp);
@@ -119,6 +119,8 @@ namespace orchestracpp
 		   parser->addExpression(exp);
 		   nrExpressions++;
 	   }
+
+	   return nrExpressions;
 
 	}
 }

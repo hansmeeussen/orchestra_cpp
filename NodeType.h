@@ -79,6 +79,8 @@ namespace orchestracpp
 
 		void readGlobalVariablesFromFile(FileBasket *fileBasket, const std::string &filename) /*throw (IOException)*/;
 
+		void readGlobalVariablesFromOutputFile(FileBasket* fileBasket, const std::string& filename);
+
 		/**
 		 * This should not change existing variables
 		 */

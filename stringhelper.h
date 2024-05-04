@@ -8,6 +8,7 @@
 #include <sstream>
 #include <vector>
 #include <algorithm>
+#include <iomanip>
 
 
 namespace orchestracpp
@@ -112,6 +113,13 @@ public:
 	{
 		std::ostringstream ss;
 		ss << subject;
+		return ss.str();
+	}
+
+	static std::string doubleToString(const double &subject, const int precision)
+	{
+		std::ostringstream ss;
+		ss << std::setprecision(precision)<<subject;
 		return ss.str();
 	}
 	

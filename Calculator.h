@@ -146,6 +146,8 @@ namespace orchestracpp
 		virtual std::vector<Var*>* getGlobalVariables();
 
 		virtual std::vector<std::string>* getVariableNames();
+
+		virtual void addGlobalVariables(std::vector<std::string>*);
 	};
 
 }
