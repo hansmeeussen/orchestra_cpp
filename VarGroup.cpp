@@ -115,30 +115,52 @@ namespace orchestracpp
 		return &globalVariables;
 	}
 
-	std::string VarGroup::getVariableNamesLine()
-	{
-		std::string line;
-		for (auto v : variables) {
-			line += IO::format(v->name, 20);
-			line += '\t';
-		}
-		return line;
-	}
-
-
 	std::unordered_map <std::string, std::string>* VarGroup::getSynonyms() {
 		return &synonyms;
 	}
 
-	std::string VarGroup::getVariableValuesLine()
+/*
+	std::string VarGroup::getVariableNamesLine()
 	{
 		std::string line;
-			for (auto v : variables) {
-			line += IO::format(v->getValue(), 20, 5);
-			line += IO::format("\t", 2);
+
+		// create alphabethic vector of variable names
+		// extremely inefficient, but just used for testing
+		std::vector<std::string> alphabeticVariableNames;
+		for (auto v : variables) {
+			alphabeticVariableNames.push_back(v->name);
 		}
+		std::sort(alphabeticVariableNames.begin(), alphabeticVariableNames.end()); 
+
+        for (auto n : alphabeticVariableNames) {
+			Var* v = get(n);
+            line += IO::format(v->name, 20);
+            line += '\t';
+         }
+
+		return line;
+	}
+
+	std::string VarGroup::getVariableValuesLine()
+	{
+		// create alphabethic vector of variable names
+		// extremely inefficient, but just used for testing
+		std::vector<std::string> alphabeticVariableNames;
+		for (auto v : variables) {
+			alphabeticVariableNames.push_back(v->name);
+		}
+		std::sort(alphabeticVariableNames.begin(), alphabeticVariableNames.end());
+
+		std::string line;
+
+		for (auto n : alphabeticVariableNames) {
+			Var* v = get(n);
+			line += IO::format(v->getValue(), 20, 12);
+            line += IO::format("\t", 2);
+		}
+
 		return line;
 
 	}
-
+*/
 }

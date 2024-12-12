@@ -578,7 +578,7 @@ namespace orchestracpp
 	}
 
 	void Calculator::addGlobalVariables(std::vector<std::string>* globalVariables) {
-		for (auto name : *globalVariables) {
+		for (std::string name : *globalVariables) {
 			variables->addToGlobalVariables(name);
 		}
 	}

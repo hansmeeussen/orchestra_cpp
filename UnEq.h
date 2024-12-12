@@ -71,6 +71,8 @@ namespace orchestracpp
 
 			bool isType3 = false;
 
+			std::string nanMessage;
+
 			virtual ~UnEq()
 			{
 				delete unknown;

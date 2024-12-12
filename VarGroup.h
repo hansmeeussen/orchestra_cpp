@@ -29,9 +29,10 @@ namespace orchestracpp
 
 
 	private:
-        std::unordered_set <Var*>variables; // the variables, no duplicates
-		std::unordered_map <std::string, Var*> variableIndx; // the variables by name 
+        std::unordered_set <Var*>variables; // the variables, no duplicates, not ordered, so order not the same as Java  version!
+		std::map <std::string, Var*> variableIndx; // the variables by name 
 		std::vector<std::string> allVariableNames;
+		//std::vector<std::string> alphabeticVariableNames;
 
 
 	public:
@@ -71,11 +72,15 @@ namespace orchestracpp
 
 		virtual std::vector<Var*>* getGlobalVariables();
 
-		virtual std::string getVariableNamesLine();
-
-		virtual std::string getVariableValuesLine();
-
 		virtual std::unordered_map <std::string, std::string>* getSynonyms();
+
+//**  only used for testing
+//		virtual std::string getVariableNamesLine();
+
+//		virtual std::string getVariableValuesLine();
+
+
+
 
 	};
 

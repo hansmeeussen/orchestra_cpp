@@ -221,6 +221,8 @@ int main()
 		} while (!inputReader->ready);
 
 		cout << "We have " << dataLines.size() << " datapoints in input file!" << "\n";
+		cout << "We have " << inputVariableNames.size() << " variables in input file!" << "\n";
+
 		//--------------------------------------------------------------------------------------------------------------------------
 
 		//--------------------------------------------------------------------------------------------------------------------------
@@ -258,6 +260,8 @@ int main()
 
 
 		//nodeType.readGlobalVariablesFromOutputFile(fileBasket, "output.dat");
+		cout << "We have are reading the nodeType from output.dat!" << "\n";
+
 		nodeType.readGlobalVariablesFromOutputFile(&fileBasket, "output.dat");
 
 		//&calculator.addGlobalVariables(nodeType.outputvariables);
@@ -280,9 +284,9 @@ int main()
 		}
 
 		// do the same for output variables
-		//for (int n = 0; n < outputVariableNames.size(); n++) {
-		//	nodeType.addVariable(outputVariableNames.get(n), 0, false, "output.dat");
-		//}
+		for (int n = 0; n < outputVariableNames.size(); n++) {
+			nodeType.addVariable(outputVariableNames.get(n), 0, false, "output.dat");
+		}
 		//--------------------------------------------------------------------------------------------------------------------------
 
 		//--------------------------------------------------------------------------------------------------------------------------
@@ -293,6 +297,8 @@ int main()
 		//--------------------------------------------------------------------------------------------------------------------------
 		// 10: Now we can create just as many nodes as there are input datapoints
 		//--------------------------------------------------------------------------------------------------------------------------
+		cout << "We are creating " << dataLines.size() << " nodes!" << "\n";
+
 		vector<Node*> nodes;
 		for (int n = 0; n < dataLines.size(); n++) {
 			nodes.push_back(new Node(&nodeType));
@@ -335,23 +341,25 @@ int main()
 		//stopFlag->pleaseStop("demo program line 266");// this is how we can stop all running calculators
 
 		NodeProcessor single(&calculator, 1, stopFlag, &nodes); // single calculator 
+		cout << "We have created a NodeProcessor!" << "\n";
 		NodeProcessor multi(&calculator, -1, stopFlag, &nodes); // negative number of calculators : automatically determine number of threads for the chemistry calculations		
 
 		// we need 4 copies of the nodes to perform the benchmark on
 		vector<Node*> nodes_random_single;
 		vector<Node*> nodes_random_multi;
-		vector<Node*> nodes_sorted_single;
-		vector<Node*> nodes_sorted_multi;
+//	 	vector<Node*> nodes_sorted_single;
+//		vector<Node*> nodes_sorted_multi;
 
 		// we clone the input nodes
 		for (int i = 0; i < nodes.size(); i++) {
 			nodes_random_single.push_back(nodes.at(i)->clone());
 			nodes_random_multi.push_back(nodes.at(i)->clone());
-			nodes_sorted_single.push_back(nodes.at(i)->clone());
-			nodes_sorted_multi.push_back(nodes.at(i)->clone());
+//			nodes_sorted_single.push_back(nodes.at(i)->clone());
+//			nodes_sorted_multi.push_back(nodes.at(i)->clone());
 		}
 
 		// we sort 2 of the 4 sets on one of the input variables
+		/**
 		std::string sortName;
 
 		if (nodeType.index("CaO") > 1) {
@@ -365,7 +373,7 @@ int main()
 		}
 		single.sortNodes(&nodes_sorted_single, sortName);
 		single.sortNodes(&nodes_sorted_multi, sortName);
-
+		*/
 
 		FileWriter* report = fileBasket.getFileWriter(&fileBasket, "report.txt");
 
@@ -396,12 +404,13 @@ int main()
 		// 15: Now we can perform the different runs and write the results to screen and report.txt file
 		//--------------------------------------------------------------------------------------------------------------------------
 
-
+		// This was just to test a single calculationL
+		// calculator.calculate(nodes[0], stopFlag);
 		//test::t(string name, vector<Node*>*nodes, NodeProcessor * np, FileWriter * report, FileBasket fileBasket, ParameterList * outputVariableNames, vector<int>*outputIndx, memoryOption, writeResults) {
 		test("single_thread_random", &nodes_random_single, &single, report, fileBasket, &outputVariableNames, &outputIndx, 1, true);
-		test("single_thread_sorted", &nodes_sorted_single, &single, report, fileBasket, &outputVariableNames, &outputIndx, 1, true);
+		//test("single_thread_sorted", &nodes_sorted_single, &single, report, fileBasket, &outputVariableNames, &outputIndx, 1, true);
 		test(to_string(nrThreads) + "_threads_random", &nodes_random_multi, &multi, report, fileBasket, &outputVariableNames, &outputIndx, 1, true);
-		test(to_string(nrThreads) + "_threads_sorted", &nodes_sorted_multi, &multi, report, fileBasket, &outputVariableNames, &outputIndx, 1, true);
+		//test(to_string(nrThreads) + "_threads_sorted", &nodes_sorted_multi, &multi, report, fileBasket, &outputVariableNames, &outputIndx, 1, true);
 
 		report->write("# \n");
 		report->write("# Now we redo the calculations to demonstrate the effect of a warm start with very good start estimations\n");
@@ -413,9 +422,9 @@ int main()
 
 		// we do not write output and memoryoption == 0, which implies that we use the results of the previous calcultion for this node as start estimation
 		test("single_thread_random", &nodes_random_single, &single, report, fileBasket, &outputVariableNames, &outputIndx, 0, false);
-		test("single_thread_sorted", &nodes_sorted_single, &single, report, fileBasket, &outputVariableNames, &outputIndx, 0, false);
+		//test("single_thread_sorted", &nodes_sorted_single, &single, report, fileBasket, &outputVariableNames, &outputIndx, 0, false);
 		test(to_string(nrThreads) + "_threads_random", &nodes_random_multi, &multi, report, fileBasket, &outputVariableNames, &outputIndx, 0, false);
-		test(to_string(nrThreads) + "_threads_sorted", &nodes_sorted_multi, &multi, report, fileBasket, &outputVariableNames, &outputIndx, 0, false);
+		//test(to_string(nrThreads) + "_threads_sorted", &nodes_sorted_multi, &multi, report, fileBasket, &outputVariableNames, &outputIndx, 0, false);
 
 		report->write("# \n");
 		report->write("# Now we do this again to check reproducibility...\n");
@@ -423,9 +432,9 @@ int main()
 
 
 		test("single_thread_random", &nodes_random_single, &single, report, fileBasket, &outputVariableNames, &outputIndx, 0, false);
-		test("single_thread_sorted", &nodes_sorted_single, &single, report, fileBasket, &outputVariableNames, &outputIndx, 0, false);
+		//test("single_thread_sorted", &nodes_sorted_single, &single, report, fileBasket, &outputVariableNames, &outputIndx, 0, false);
 		test(to_string(nrThreads) + "_threads_random", &nodes_random_multi, &multi, report, fileBasket, &outputVariableNames, &outputIndx, 0, false);
-		test(to_string(nrThreads) + "_threads_sorted", &nodes_sorted_multi, &multi, report, fileBasket, &outputVariableNames, &outputIndx, 0, false);
+		//test(to_string(nrThreads) + "_threads_sorted", &nodes_sorted_multi, &multi, report, fileBasket, &outputVariableNames, &outputIndx, 0, false);
 
 		report->close();
 

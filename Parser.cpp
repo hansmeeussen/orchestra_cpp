@@ -366,38 +366,34 @@ namespace orchestracpp
 //    std::map<std::string, NumberNode*> NumberNode::constants;
 	//std::map<std::string, NumberNode*> Parser::constants;
 
-
-	std::string NumberNode::doubleToString(const double value){
-		std::ostringstream strs;
-        strs << value;
-        std::string doubleString = strs.str();
-		return doubleString;
-	}
-
 	NumberNode *NumberNode::createNumberNode(const std::string &nameIn, Parser* parser)
 	{
 		NumberNode *tmpNode;
 		/* convert string to double and back to assure standard format of string (1.0 1 1.000) */
 		double tmpNumber = std::stod(nameIn);
         // convert double to string
-		std::string name = doubleToString(tmpNumber);
-			if (parser->constants.find(name) != parser->constants.end())
-			{ //  this constant already exists,
-			   tmpNode = parser->constants[name];
-			}
-			else
-			{ // does not exist, create new one and add to constants
-				tmpNode = new NumberNode(name,parser);
-				parser->newNode(tmpNode); // register as expression node for deletion
-				parser->constants.emplace(name, tmpNode);
-			}
+	    // be careful: standard C++ dtos has too low accuracy!
+		std::string name = StringHelper::doubleToString(tmpNumber, 12);
+	
+		if (parser->constants.find(name) != parser->constants.end())
+		{ //  this constant already exists,
+			tmpNode = parser->constants[name];
+		}
+		else
+		{ // does not exist, create new one and add to constants
+			tmpNode = new NumberNode(name,parser);
+			parser->newNode(tmpNode); // register as expression node for deletion
+			parser->constants.emplace(name, tmpNode);
+			//std::cout << std::setprecision(12) << nameIn << " " << tmpNumber << " " << name << std::endl;
 
+		}
 		return tmpNode;
 	}
 
 	NumberNode *NumberNode::createNumberNode(double value, Parser* parser)
 	{
-		return createNumberNode(doubleToString(value), parser);
+		// be careful: standard C++ dtos has too low accuracy!
+		return createNumberNode(StringHelper::doubleToString(value, 12), parser);
 	}
 
 	NumberNode::NumberNode(const std::string &name, Parser* parser) : value(std::stod(name))

@@ -162,8 +162,6 @@ namespace orchestracpp
 
 		NumberNode(const std::string &name, Parser* parser);
 		
-		static std::string doubleToString(const double value);
-
 	public:
 		double evaluate() override;
 

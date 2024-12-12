@@ -48,7 +48,7 @@ bool IO::testing = false;
 
 	double IO::checkNAN(double x, const std::string &message)// throw(OrchestraException)
 	{
-		if ((NAN == x) || std::isnan(x) || std::isinf(x))
+		if (/*(NAN == x) || */ std::isnan(x) || std::isinf(x))
 		{
 			throw OrchestraException(message);
 		}

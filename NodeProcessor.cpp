@@ -20,14 +20,15 @@ namespace orchestracpp
 		// create independent calculator copies, one for each thread.
 
 		for (int n = 0; n < this->nrThreads; n++) {
-			//cout << "creating calculator " << n << endl;
-
+			cout << "creating calculator " << n << endl;
 			Calculator* tmpCalculator = calculator->clone();
 
 			// perform a first calculation on an equilibrated node
 			// this is useful for benchmarking different methods, as the first calculation
 			// for each calculator is slow because of initialisation
-			tmpCalculator->calculate(nodes->at(0), sf);
+			bool success = tmpCalculator->calculate(nodes->at(0), sf);
+			cout << "first calculation was successful " << success << endl;
+
 
 			calculators.push_back(tmpCalculator);
 		}
@@ -146,7 +147,7 @@ namespace orchestracpp
 		while (true) {
 
 			{
-				// this is the place where the treads wait until notified to start processing
+				// this is the place where the threads wait until notified to start processing
 				unique_lock<mutex> lck(mtx);
 				condition.wait(lck, [this] {return !waitforprocessing; });
 			}
@@ -154,7 +155,7 @@ namespace orchestracpp
 			// quit if asked to do so (from nodeprocessor destructor)
 			if (quit)break;
 
-			// here the tread will ask for a node and calculate this
+			// here the thread will ask for a node and calculate this
 			// until all nodes are processed
 			while (true) {
 				Node* node = getNextNode();

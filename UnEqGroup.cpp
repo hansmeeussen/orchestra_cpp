@@ -171,7 +171,7 @@ namespace orchestracpp
 			initialiseIterationReport();
 		}
 
-//		if (firstIteration)
+//		if (firstIteration2)
 //		{
 //			initialiseIterationReport2();
 //		}
@@ -182,13 +182,19 @@ namespace orchestracpp
 		// activate - inactivate uneq3's based on given values of unknown
 		// negative values will switch uneq off
 		// we keep this set constant during a mineral iteration
-		for (auto tmp : uneqs)
+
+		int nrOfMinerals = 0;
+
+		for (auto uneq : uneqs)
 		{
-			if (tmp->isType3)
+			if (uneq->isType3)
 			{
-				tmp->active = tmp->unknown->getValue() > 0;
+				nrOfMinerals++;
+				uneq->active = uneq->unknown->getValue() > 0;
 			}
 		}
+		
+		maxMineralIterations = std::max(50, nrOfMinerals);
 
 		while (nrMineralIteration < maxMineralIterations)
 		{
@@ -197,20 +203,24 @@ namespace orchestracpp
 
 			nrIter = iterateLevel0(iterationReport, flag); // <------------------------------------------
 
+			// if nrIter = maxNrIter, then we did not find convergence, what are doing with this info?
+			
+            // find the most supersaturated INACTIVE mineral
+
 			UnEq *mostSuperSatInactiveUnEq = nullptr;
 			double mostsat = 0;
 
-			for (auto tmp : uneqs)
+			for (auto uneq : uneqs)
 			{
-				if (tmp->isType3)
+				if (uneq->isType3)
 				{
-					double satindex = tmp->siVariable->getValue();
-					if (!tmp->active)
+					double satindex = uneq->siVariable->getValue();
+					if (!uneq->active)
 					{
 						if (satindex > mostsat)
 						{
 							mostsat = satindex;
-							mostSuperSatInactiveUnEq = tmp;
+							mostSuperSatInactiveUnEq = uneq;
 						}
 					}
 				}
@@ -226,7 +236,7 @@ namespace orchestracpp
 					minTol->setValue(1e-3); // we only set the value of mintol to 1e-3 once during iteration
 				}
 				mostSuperSatInactiveUnEq->active = true;
-				mostSuperSatInactiveUnEq->unknown->setValue(0);
+				mostSuperSatInactiveUnEq->unknown->setValue(1e-3);
 			}
 
 			if (flag != nullptr)
@@ -265,11 +275,11 @@ namespace orchestracpp
 			monitor = false;
 		}
 
-		if ((firstIteration) && (iterationReport != nullptr))
-		{
-			iterationReport->close();
-			firstIteration = false;
-		}
+//		if ((firstIteration2) && (iterationReport != nullptr))
+//		{
+//			iterationReport->close();
+//			firstIteration2 = false;
+//		}
 
 
 	}
@@ -299,9 +309,9 @@ namespace orchestracpp
 						writeIterationReportLine(nrIter);
 					}
 
-//					if ((firstIteration) && (iterationReportWriter != nullptr))
+//					if ((firstIteration2) && (iterationReportWriter != nullptr))
 //					{
-//						writeIterationReportLine2(nrIter);
+//						writeIterationReportLine2(totalNrIter);
 //					}
 
 					calculateJacobian();
@@ -379,14 +389,14 @@ namespace orchestracpp
 
 		iterationReport->write("\n");
 	}
-
-//	void UnEqGroup::initialiseIterationReport2()// throw(IOException)
-//	{
-//		iterationReport = FileBasket::getFileWriter(nullptr, "iteration.dat");
-//		iterationReport->write(variables->getVariableNamesLine());
-//		iterationReport->write('\n');
-//	}
-
+	/*
+	void UnEqGroup::initialiseIterationReport2()// throw(IOException)
+	{
+		iterationReport = FileBasket::getFileWriter(nullptr, "iterationcpp.dat");
+		iterationReport->write(variables->getVariableNamesLine());
+		iterationReport->write('\n');
+	}
+	*/
 	void UnEqGroup::writeIterationReportLine(double nrIter) //throw(IOException, OrchestraException)
 	{
 		if (totalNrIter > 1000)
@@ -465,15 +475,16 @@ namespace orchestracpp
 		}
 		iterationReport->write("\n");
 	}
-
-//	void UnEqGroup::writeIterationReportLine2(double nrIter) //throw(IOException, OrchestraException)
-//	{
-//		if (totalNrIter > 20) {
-//			return;
-//		}
-//		iterationReport->write(variables->getVariableValuesLine());
-//		iterationReport->write('\n');
-//   }
+	/*
+	void UnEqGroup::writeIterationReportLine2(double nrIter) //throw(IOException, OrchestraException)
+	{
+		if (nrIter > 120) {
+			return;
+		}
+		iterationReport->write(variables->getVariableValuesLine());
+		iterationReport->write('\n');
+    }
+    */
 
 	void UnEqGroup::calculateJacobian()// throw(OrchestraException)
 		{

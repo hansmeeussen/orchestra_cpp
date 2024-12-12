@@ -103,6 +103,7 @@ namespace orchestracpp
 							{
 								throw ReadException(value + " was not defined as a variable!");
 							}
+							nanMessage = "NAN: " + this->equation->name;
 						}
 						else if (name == "si:") {
 							siVariable = vars->get(value);
@@ -274,17 +275,21 @@ namespace orchestracpp
 
 		}
 
+		/*
+         * <1 is convergent, indicates that residual < tolerance
+         * larger than 1 means less convergent
+         *
+         */
+
 		double UnEq::howConvergent() //throw(OrchestraException)
 		{
 			if (toleranceVariable != nullptr)
 			{
-//				return std::abs(residual()) / toleranceVariable->getValue();
-				return std::abs(IO::checkNAN(residual(), "NAN: "+this->equation->name)) / toleranceVariable->getValue();
+				return std::abs(IO::checkNAN(residual(), nanMessage)) / toleranceVariable->getValue();
 			}
 			else
 			{
-//				return std::abs(residual()) / eq_tolerance;
-				return std::abs(IO::checkNAN(residual(), "NAN: " + this->equation->name)) / eq_tolerance;
+				return std::abs(IO::checkNAN(residual(), nanMessage)) / eq_tolerance;
 			}
 		}
 
@@ -300,14 +305,7 @@ namespace orchestracpp
 
 			if (un_type == lin)
 			{
-//				if (unknown->getValue() >= 0)
-//				{
-					unknown->setValue(tmp + un_delta);
-//				}
-//				else
-//				{
-//					unknown->setValue(tmp + un_delta);
-//				}
+				unknown->setValue(tmp + un_delta);
 			}
 			else
 			{ // un_type == log
