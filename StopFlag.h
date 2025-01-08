@@ -20,7 +20,7 @@ namespace orchestracpp
 	public:
     //JAVA  'volatile' has a different meaning in C++:
     //ORIGINAL LINE: public volatile boolean cancelled;
-		std::atomic<bool> cancelled = false;
+		std::atomic<bool> cancelled;
 
 
 	private:

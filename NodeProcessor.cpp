@@ -16,7 +16,7 @@ namespace orchestracpp
 			this->nrThreads = nodes->size();
 		}
 
-		cout << "Nr threads: "<<this->nrThreads << endl;
+		cout << "Nr threads: "<< this->nrThreads << endl;
 		// create independent calculator copies, one for each thread.
 
 		for (int n = 0; n < this->nrThreads; n++) {
@@ -45,6 +45,7 @@ namespace orchestracpp
 
 	void NodeProcessor::processNodes(vector<Node*>* nodes, int mo) {
 		this->memoryOption = mo;
+		setSize = nodes->size() / (nrThreads * 20);
 		processNodes(nodes);
 	}
 
@@ -71,7 +72,7 @@ namespace orchestracpp
 	}
 
 
-
+	/*
 	int NodeProcessor::partition(vector<Node*>* nodes, int low, int high) {
 		// we take the element at high index as pivot
 		double  pivot = nodes->at(high)->getvalue(sort_indx);
@@ -89,6 +90,7 @@ namespace orchestracpp
 		return (i);
 	}
 
+	
 	void NodeProcessor::quickSort(vector<Node*>* nodes, int low, int high) {
 		if (low < high) {
 			int pi = partition(nodes, low, high);
@@ -107,14 +109,13 @@ namespace orchestracpp
 		sort_indx = nodes->at(0)->nodeType->index(variableName);
 		quickSort(nodes, 0, nodes->size() - 1);
 	}
+	*/
+
 
 	//we return nullPtr when all nodes are processed
+	/*
 	Node* NodeProcessor::getNextNode() {
-
-		// if one of the treads has processed the last node and has set the processingready flag
-		// the other threads that enter this function can stop as well
 		
-
 		std::lock_guard<mutex> lock(mtx); // use a lock to allow only synchronized access (one thread at the time)
 		                                  // this lock is automatically released when it gets out of scope
 
@@ -132,6 +133,42 @@ namespace orchestracpp
 			return  nullptr;
 		}
 	}
+	*/
+
+	//* New
+
+	/* This method returns a vector of node (pointers) to be calculated 
+	   when the number of nodes is zero, calculation is ready
+	   we have to return a new vector ? or does each thread own a vector of nodes?   
+	*/
+
+	vector<Node*>* NodeProcessor::getNextNodes() {
+		setSize=100;
+
+		std::lock_guard<mutex> lock(mtx); // use a lock to allow only synchronized access (one thread at the time)
+		// this lock is automatically released when it gets out of scope
+
+        // if one of the treads has processed the last node and has set the processingready flag
+        // the other threads that enter this function can stop as well
+
+		if (processingready) return nullptr;
+
+		if (currentNodeNr < nodes->size()) {
+			vector<Node*>* ntbc = new vector<Node*>;
+
+			for (int n = 0; n < setSize; n++) {
+				ntbc->push_back((*nodes)[currentNodeNr]);
+				currentNodeNr++;
+				if (currentNodeNr >= nodes->size()) break;
+			}
+			return ntbc;
+		}
+		else {
+			processingready = true;
+			condition.notify_one(); // notify the waiting main thread
+			return  nullptr;
+		}
+	}
 
 	void NodeProcessor::pleaseStop() {
 		std::lock_guard<mutex> lock(mtx);
@@ -140,6 +177,7 @@ namespace orchestracpp
 		condition.notify_all();
 	}
 
+	/*
 	// the function that is called by the independent threads
 	// each thread uses its own calculator copy
 	void NodeProcessor::runf(Calculator* c) {
@@ -169,6 +207,45 @@ namespace orchestracpp
 		}
 
 	}
+	*/
+	
+	void NodeProcessor::runf(Calculator* c) {
+
+		while (true) {
+
+			{
+				// this is the place where the threads wait until notified to start processing
+				unique_lock<mutex> lck(mtx);
+				condition.wait(lck, [this] {return !waitforprocessing; });
+			}
+
+			// quit if asked to do so (from nodeprocessor destructor)
+			if (quit)break;
+
+			// here the thread will ask for a node and calculate this
+			// until all nodes are processed
+			while (true) {
+				vector<Node*>* ntbc = getNextNodes();
+				if (ntbc == nullptr) {
+					break;
+				}
+
+				if (memoryOption == 0) { // no memory, simply use current node as start estimation
+					for (int n = 0; n < ntbc->size(); n++) {
+						c->calculate(ntbc->at(n), sf);
+					}
+				}
+				else {
+					for (int n = 0; n < ntbc->size(); n++) { // use last calculated node as start estimation
+						c->calculate2(ntbc->at(n), sf);
+					}
+				}
+				delete(ntbc);// is this necessary?
+			}
+		}
+
+	}
+	
 }
 
 

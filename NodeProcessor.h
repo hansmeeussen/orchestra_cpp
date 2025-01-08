@@ -36,6 +36,8 @@ namespace orchestracpp
 
 		int sort_indx;
 
+		int setSize = 1;
+
 	public:
 	
 		~NodeProcessor() { // Delete all the created calculators
@@ -60,18 +62,20 @@ namespace orchestracpp
 
 		void pleaseStop();
 
-		void sortNodes(vector<Node*>* nodes, string variableName);
+		//void sortNodes(vector<Node*>* nodes, string variableName);
 
-		int partition(vector<Node*>* nodes, int low, int high);	
+		//int partition(vector<Node*>* nodes, int low, int high);	
 		
-		void swap(int from, int to, vector<Node*>* nodes);
+		//void swap(int from, int to, vector<Node*>* nodes);
 
-		void quickSort(vector<Node*>* nodes, int low, int high);
+		//void quickSort(vector<Node*>* nodes, int low, int high);
 
 
 	private:
 
 		Node* getNextNode();
+
+		vector<Node*>* getNextNodes();
 
 		void runf(Calculator* c);
 

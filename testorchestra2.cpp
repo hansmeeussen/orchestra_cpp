@@ -430,11 +430,28 @@ int main()
 		report->write("# Now we do this again to check reproducibility...\n");
 		report->write("# \n");
 
+		for (int n = 0; n < 10; n++) {
+			test("single_thread_random", &nodes_random_single, &single, report, fileBasket, &outputVariableNames, &outputIndx, 0, false);
+			//test("single_thread_sorted", &nodes_sorted_single, &single, report, fileBasket, &outputVariableNames, &outputIndx, 0, false);
+			test(to_string(nrThreads) + "_threads_random", &nodes_random_multi, &multi, report, fileBasket, &outputVariableNames, &outputIndx, 0, false);
+			//test(to_string(nrThreads) + "_threads_sorted", &nodes_sorted_multi, &multi, report, fileBasket, &outputVariableNames, &outputIndx, 0, false);
+		}
 
-		test("single_thread_random", &nodes_random_single, &single, report, fileBasket, &outputVariableNames, &outputIndx, 0, false);
-		//test("single_thread_sorted", &nodes_sorted_single, &single, report, fileBasket, &outputVariableNames, &outputIndx, 0, false);
-		test(to_string(nrThreads) + "_threads_random", &nodes_random_multi, &multi, report, fileBasket, &outputVariableNames, &outputIndx, 0, false);
-		//test(to_string(nrThreads) + "_threads_sorted", &nodes_sorted_multi, &multi, report, fileBasket, &outputVariableNames, &outputIndx, 0, false);
+
+		report->write("# \n");
+		report->write("# Now we repeat the calculations to fully use the processor...\n");
+		report->write("# \n");
+		// now we do some hard work
+		for (int n = 0; n < 30; n++) {
+			nodes_random_multi.clear();
+			for (int i = 0; i < nodes.size(); i++) {
+				//	nodes_random_single.push_back(nodes.at(i)->clone());
+				nodes_random_multi.push_back(nodes.at(i)->clone());
+			}
+			test(to_string(nrThreads) + "_threads_random", &nodes_random_multi, &multi, report, fileBasket, &outputVariableNames, &outputIndx, 1, false);
+		}
+
+		// we can wait 5 minutes and start again?
 
 		report->close();
 
