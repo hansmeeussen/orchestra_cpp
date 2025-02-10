@@ -13,12 +13,11 @@ namespace orchestracpp
 
 	public:
 		NodeType *nodeType; // NodeType to which this Node belongs
-		double *values; // values of node variables
-
+		double *values;     // values of node variables
 
 		virtual ~Node()
 		{
-			delete[] values;
+			delete [] values;
 		}
 
 		Node(NodeType *nodeType);

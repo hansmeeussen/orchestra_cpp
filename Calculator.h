@@ -50,7 +50,7 @@ namespace orchestracpp
 
 		NodeIOObject *iob1            = nullptr;
 		Node *localLastSuccessfulNode = nullptr; // should we store this one not locally, but in the calculator group? or threadgroup?
-		Node* lastSuccessfulNode2     = nullptr;
+		//Node* lastSuccessfulNode2     = nullptr;
 
 	private:
 		int trylevel = 0;
@@ -70,6 +70,9 @@ namespace orchestracpp
 		bool silent = false;
 
 	public:
+
+		Node* lastSuccessfulNode2 = nullptr;
+
 		virtual ~Calculator()
 		{
 			delete variables;

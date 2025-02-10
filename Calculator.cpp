@@ -60,13 +60,10 @@ namespace orchestracpp
 			IO::println(" sec.");
 
 			// write expanded text for testing
-			FileWriter* writer = FileBasket::getFileWriter(nullptr, "expanded_cpp.txt");
-			writer->write(expandedText);
-			writer->close();
-			delete writer;
+			//FileWriter writer("expanded_cpp.txt");
+			//writer.write(expandedText);
+			//writer.close();
 			
-
-
 			readSystemFromExpandedInput(expandedText);
 			//IO::print(expandedText);
 		}
@@ -241,7 +238,8 @@ namespace orchestracpp
 		bool success = calculate(node, flag);
 
 		if (success) {
-			lastSuccessfulNode2 = node->clone();
+			//lastSuccessfulNode2 = node->clone(); // this creates a new node, so potential memory leak
+			lastSuccessfulNode2->clone(node);
 		}
 		return success;
 	}
@@ -541,6 +539,12 @@ namespace orchestracpp
 		totNrIterations += uneqs->getTotalNrIter();
 		totalNrIterVar->setValue(totNrIterations);
 		nrIterVar->setValue(uneqs->getNrIter());
+
+		// if total number of iterations == 0? do we have succes?
+
+		if (totNrIterations == 0) {
+			success = false;
+		}
 
 		//do we copy results to global node if not successful?
 		if (success)

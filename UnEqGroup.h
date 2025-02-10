@@ -33,7 +33,7 @@ namespace orchestracpp
 
 			bool monitor = false; //switch on iteration monitoring
 			FileWriter *iterationReport = nullptr;
-			double originalMaxIter = 0;
+			//double originalMaxIter = 0;
 			Var *minTol = nullptr;
 			double minTolOrgValue = 0;
 			Var *tolerance = nullptr;

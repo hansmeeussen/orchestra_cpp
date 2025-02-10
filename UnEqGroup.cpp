@@ -105,7 +105,7 @@ namespace orchestracpp
 
 	bool UnEqGroup::iterate(StopFlag *flag)
 	{
-		originalMaxIter = maxIter;
+		//originalMaxIter = maxIter;
 		totalNrIter = 1;
 
 		try
