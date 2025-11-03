@@ -21,6 +21,8 @@ namespace orchestracpp
 		std::string documentation;
 		std::vector<OObjectPieceOfText*> textPointers; // contains pieces of text
 		std::vector<OObjectPieceOfText*> placeHolderPointer;
+		std::vector<OObjectPieceOfText*> deleteableTextPointers;
+
 
 		// Static methods to read members from reader
 	public:
@@ -38,11 +40,13 @@ namespace orchestracpp
 				delete o;
 			}
 
+
+
 		}
 
 		static std::string readObjectName(OrchestraReader *in) /*throw(IOException)*/;
 
-		static ParameterList *readParameterList(OrchestraReader *in);
+		static ParameterList* readParameterList(OrchestraReader* in);
 
 		static std::string readDocumentation(OrchestraReader *in) /*throw(IOException)*/;
 

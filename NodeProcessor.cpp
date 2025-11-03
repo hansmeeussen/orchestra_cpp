@@ -51,7 +51,7 @@ namespace orchestracpp
 	void NodeProcessor::processNodes(vector<Node*>* nodes, int mo) {
 		this->memoryOption = mo;
 		setSize = nodes->size() / (nrThreads * 10);
-		if (setSize < 1) setSize = 1;
+		if (setSize < 1) setSize = 1; 
 		//setSize = 1; //force a setsize of 1
 		// The setSize determines the number of nodes that is processed in one go by each thread. 
 		// The optimal setsize is larger for nodes that are related

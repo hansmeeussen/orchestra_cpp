@@ -50,9 +50,15 @@ namespace orchestracpp
 
 		this->value = value;
 
-		for (auto n : newDependentMemoryNodes) {
+//		for (auto n : newDependentMemoryNodes) {
+//			n->needsEvaluation = true;
+//		}
+
+		for (auto n : dependentMemoryNodes) {
 			n->needsEvaluation = true;
 		}
+
+
 	}
 
 	double Var::getValue()
@@ -104,13 +110,17 @@ namespace orchestracpp
 	void Var::setDependentMemoryNode(MemoryNode *dependentMemoryNode)
 	{
 		// check if we already have this one in the list and return if so
-		for (auto n : newDependentMemoryNodes) {
-			if (n == dependentMemoryNode) {
-				return;
-			}
-		}
+	//	for (auto n : newDependentMemoryNodes) {
+	//		if (n == dependentMemoryNode) {
+	//			return;
+	//		}
+	//	}
 		
-		newDependentMemoryNodes.push_back(dependentMemoryNode);
+	//	newDependentMemoryNodes.push_back(dependentMemoryNode);
+
+
+		// we use a set now that automatically prevents duplicate entries
+		dependentMemoryNodes.insert(dependentMemoryNode);
 	}
 
 //	void Var::initializeDependentMemoryNodesArray()

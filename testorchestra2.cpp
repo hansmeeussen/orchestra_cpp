@@ -79,7 +79,7 @@ using namespace std;
 using namespace std::chrono;
 using namespace orchestracpp;
 
-
+/*
 // This function performs a complete test and writes results to report file
 void test(string name, vector<Node*>* nodes, NodeProcessor* np, FileWriter* report, FileBasket fileBasket, ParameterList* outputVariableNames, vector<int>* outputIndx, int memoryOption, bool writeOutput) {
 	int nrThreads = std::thread::hardware_concurrency();
@@ -110,27 +110,19 @@ void test(string name, vector<Node*>* nodes, NodeProcessor* np, FileWriter* repo
 			nrFailedNodes++;
 		}
 	}
-	
-	int nrFailedNodes2 = 0;
-	for (int n = 0; n < nodes->size(); n++) {
-		if (nodes->at(n)->getvalue(iterindex) < 0.5) {
-			//std::cout << n << " :2:  " << nodes->at(n)->getvalue(iterindex) << endl;
-			nrFailedNodes2++;
-		}
+
+	std::string threads;
+	if (np->nrThreads == 1) {
+		threads = "1_thread";
+	}else {
+		threads = to_string(np->nrThreads) + "_threads";
 	}
-
-	if (nrFailedNodes != nrFailedNodes2) {
-		std::cout <<"Number of failed nodes is not consistent!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
-	}
-
-
-
 
 
 	// write result to report file and screen
-	string result = (name + ": \t" + to_string(nodes->size()) + " nodes,   calculation time: " + to_string(duration) + " msec,  Calculations/sec:  " + to_string(nodes->size() * 1000 / duration) + " Total number of iterations: " + to_string(tot_nr_iter) + " Total number of failed nodes: " + to_string(nrFailedNodes)+ "\n");
-	std::cout << result;
-	report->write(result);
+	string line = (threads + name + ": \t" + to_string(nodes->size()) + " nodes,   calculation time: " + to_string(duration) + " msec,  Calculations/sec:  " + to_string(nodes->size() * 1000 / duration) + " Total number of iterations: " + to_string(tot_nr_iter) + " Total number of failed nodes: " + to_string(nrFailedNodes)+ "\n");
+	std::cout << line;
+	report->write(line);
 
 	// write calculated data to output file for checking
 	if (writeOutput) {
@@ -158,7 +150,7 @@ void test(string name, vector<Node*>* nodes, NodeProcessor* np, FileWriter* repo
 	}
 }
 
-
+*/
 
 int main()
 {
@@ -197,28 +189,11 @@ int main()
 		//    or to convert input value)
 		//--------------------------------------------------------------------------------------------------------------------------
 		Calculator calculator(&fileID);
-		//Calculator calculator(new FileID(&fileBasket, "chemistry1.inp"));
-		//Calculator convertInput(&fileID2);// a calculator to perform initial calculations
-
-		//--------------------------------------------------------------------------------------------------------------------------
-		// 5a: Standard the complete definition of the chemical system is read from the chemistry input file, but it is possible to 
-		//    add some additional text to the chemistry file (e.g. containing extra calculations) which we can provide in an extra string.
-		//    This string is inserted at the start of the text of the chemical input file. 
-		//    Used by HPX
-		//--------------------------------------------------------------------------------------------------------------------------
-		//std::string extratext("@class: hpxtxt(){@Globalvar: hpxpipi 3.14}");
-		//Calculator calculator(&fileID, extratext); // providing addtional text
-
-		//Calculator calculator2 = *calculator1.clone(); // this is how we can clone a calculator
-
-
 
 
 		//--------------------------------------------------------------------------------------------------------------------------
 		// 6: read all input data points from the file input.dat
 		//--------------------------------------------------------------------------------------------------------------------------
-
-//		OrchestraReader* inputReader = OrchestraReader::getOrchestraFileReader(&fileBasket, "input.dat");
 		OrchestraReader inputReader = *OrchestraReader::getOrchestraFileReader(&fileBasket, "input.dat");
 
 
@@ -270,6 +245,7 @@ int main()
 		ParameterList outputVariableNames(line);
 
 		cout << "We have " << outputVariableNames.size() << " variables in output file!" << "\n";
+
 		//--------------------------------------------------------------------------------------------------------------------------
 
 
@@ -282,21 +258,29 @@ int main()
 		//    We do this for all calculators in the system 
 		// 
 		//    In this way we have defined all variables that are stored in each node.
+		// 
+		//    We also let the nodeType read the output file, so it knows which variables are used for output and stored in the node
+		//    The default values of these variables are taken from the calculator
 		//--------------------------------------------------------------------------------------------------------------------------
 
 
 		cout << "We  are reading the nodeType (which variables to store in a node/cell) from output.dat!" << "\n";
 
+
+		// read the output file and create a list of all required output variables
 		nodeType.readGlobalVariablesFromOutputFile(&fileBasket, "output.dat");
-
+		// pass the list with output variables to the calculator, which makes all these variables global 
 		calculator.addGlobalVariables(&nodeType.outputVariables);
-
+		// use calculator to make rquired variables with default values global
 		nodeType.useGlobalVariablesFromCalculator(&calculator);
 
 
+		// Otherwise output variables would be made node variables, but would get default values of zero
+		// these values will subsequently passed on to calculator and overwrite local values
+
 
 		//--------------------------------------------------------------------------------------------------------------------------
-		// 9: Now we can add the input and output variables to the nodeType 
+		// 9: Now we can add all input and output variables to the nodeType 
 		//    The "false" parameter indicates that each node has an individual value for this variable 
 		//    This in contrast with "true" which indicates static variables of which there is a single copy shared by all nodes (e.g. time or timestep etc.)
 		//    It is also possible to indicate where the variable definition originates from, in this case the input and output file.
@@ -306,13 +290,13 @@ int main()
 		}
 
 		// do the same for output variables
-		for (int n = 0; n < outputVariableNames.size(); n++) {
-			nodeType.addVariable(outputVariableNames.get(n), 0, false, "output.dat");
-		}
+		//for (int n = 0; n < outputVariableNames.size(); n++) {
+		//	nodeType.addVariable(outputVariableNames.get(n), 0, false, "output.dat");
+		//}
 
 		// just in case these are not defined in input or output
-		nodeType.addVariable("tot_nr_iter", 0, false, "extra");
-		nodeType.addVariable("failed", 0, false, "extra");
+		//nodeType.addVariable("tot_nr_iter", 0, false, "extra");
+		//nodeType.addVariable("failed", 0, false, "extra");
 		//--------------------------------------------------------------------------------------------------------------------------
 
 		//--------------------------------------------------------------------------------------------------------------------------
@@ -368,9 +352,44 @@ int main()
 
 		StopFlag stopFlag;
 
+
+
+		FileWriter fw("output_cpp.txt");
+		// write header 
+		for (int n = 0; n < outputVariableNames.size(); n++) {
+			fw.write(outputVariableNames.get(n));
+			fw.write("\t");
+		}
+		fw.write("\n");
+
+		// now we can do the calculations without a node processor
+		for (int n = 0; n < nodes.size(); n++) {
+
+			for (int i = 0; i < inputIndx.size(); i++) {
+				nodes[0]->setValue(inputIndx[i], nodes[n]->getvalue(inputIndx[i]));
+			}
+			
+			calculator.calculate(nodes[0], &stopFlag);
+
+			for (int i = 0; i < outputIndx.size(); i++) {
+				fw.write(StringHelper::doubleToString(nodes.at(0)->getvalue(outputIndx.at(i)), 18));
+				fw.write("\t");
+			}
+			fw.write("\n");
+
+		}
+
+
+		fw.close();
+
+
+
+		/*
+
+
 		NodeProcessor single(&calculator, 1, &stopFlag, &nodes); // single calculator 
 		cout << "We have created a NodeProcessor!" << "\n";
-		NodeProcessor multi(&calculator, -1, &stopFlag, &nodes); // negative number of calculators : automatically determine number of threads for the chemistry calculations		
+	//	NodeProcessor multi(&calculator, -1, &stopFlag, &nodes); // negative number of calculators : automatically determine number of threads for the chemistry calculations		
 
 		// we need 2 copies of the nodes to perform the benchmark on
 		vector<Node*> nodes_random_single;
@@ -416,10 +435,16 @@ int main()
 		// This was just to test a single calculation
 		// calculator.calculate(nodes[0], stopFlag);
 		//test::t(string name, vector<Node*>*nodes, NodeProcessor * np, FileWriter * report, FileBasket fileBasket, ParameterList * outputVariableNames, vector<int>*outputIndx, memoryOption, writeResults) {
-		test("single_thread_random", &nodes_random_single, &single, &report, fileBasket, &outputVariableNames, &outputIndx, 1, true);
-		test(to_string(multi.nrThreads) + "_threads_random", &nodes_random_multi, &multi, &report, fileBasket, &outputVariableNames, &outputIndx, 1, true);
+		//test("", &nodes_random_single, &single, &report, fileBasket, &outputVariableNames, &outputIndx, 1, true);
 
-		report.write("# \n");
+
+		// or we can just do a single calculation without a node processor 
+        */
+		/*
+		test("", &nodes_random_single, &single, &report, fileBasket, &outputVariableNames, &outputIndx, 1, true);
+		test("", &nodes_random_multi, &multi, &report, fileBasket, &outputVariableNames, &outputIndx, 1, true);
+
+		report.write("# \n"); 
 		report.write("# Now we redo the calculations to demonstrate the effect of a warm start with very good start estimations\n");
 		report.write("# The performance of a solver for transport systems is typically closer to the results for warm start conditions, than those for random input.\n");
 		report.write("# We expect no significant difference anymore between ordered / non ordered as for each cell the conditions of the previous calculations for this cell are used.\n");
@@ -427,18 +452,23 @@ int main()
 		report.write("# Good scaling of calculation speed with number of threads indicates low overhead of multithreading.\n");
 		report.write("# \n");
 
-		// we do not write output and memoryoption == 0, which implies that we use the results of the previous calculation for this node as start estimation
-		test("single_thread_random", &nodes_random_single, &single, &report, fileBasket, &outputVariableNames, &outputIndx, 0, false);
-		test(to_string(multi.nrThreads) + "_threads_random", &nodes_random_multi, &multi, &report, fileBasket, &outputVariableNames, &outputIndx, 0, false);
+		for (int i = 0; i < nodes.size(); i++) {
+			nodes_random_single.at(i)->clone(nodes.at(i)); // so we copy the contents of node into node_random_multi
+			nodes_random_multi.at(i)->clone(nodes.at(i)); // so we copy the contents of node into node_random_multi
+		}
 
+		// we do not write output and memoryoption == 0, which implies that we use the results of the previous calculation for this node as start estimation
+		test("", &nodes_random_single, &single, &report, fileBasket, &outputVariableNames, &outputIndx, 1, false);
+		test("", &nodes_random_multi, &multi, &report, fileBasket, &outputVariableNames, &outputIndx, 1, false);
+		 
 		report.write("# \n");
 		report.write("# Now we do this again to check reproducibility...\n");
 		report.write("# \n");
 
 
 		for (int n = 0; n < 10; n++) {
-			test("single_thread_random", &nodes_random_single, &single, &report, fileBasket, &outputVariableNames, &outputIndx, 0, false);
-			test(to_string(multi.nrThreads) + "_threads_random", &nodes_random_multi, &multi, &report, fileBasket, &outputVariableNames, &outputIndx, 0, false);
+			test("", &nodes_random_single, &single, &report, fileBasket, &outputVariableNames, &outputIndx, 0, false);
+			test("", &nodes_random_multi, &multi, &report, fileBasket, &outputVariableNames, &outputIndx, 0, false);
 		}
 
 		
@@ -450,13 +480,13 @@ int main()
 		NodeProcessor nodeProcessor5(&calculator, -1, &stopFlag, &nodes);
 		// now we do some hard work, with a new nodeProcessor
 
-		for (int n = 0; n < 10; n++) {
+		for (int n = 0; n < 20; n++) {
 
 			for (int i = 0; i < nodes.size(); i++) {
 				nodes_random_multi.at(i)->clone(nodes.at(i)); // so we copy the contents of node into node_random_multi
 			}
 
-			test(to_string(n)+"_"+to_string(nodeProcessor5.nrThreads) + "_threads_random", &nodes_random_multi, &nodeProcessor5, &report, fileBasket, &outputVariableNames, &outputIndx, 1, true);
+			test("", &nodes_random_multi, &multi, &report, fileBasket, &outputVariableNames, &outputIndx, 1, false);
 		}
 
 		// we can wait 5 minutes and start again?
@@ -471,7 +501,7 @@ int main()
 		report.write("# Now repeat the calculations gradually increasing the number of threads ...\n");
 		report.write("# \n");
 
-		for (int nrThreads = 1; nrThreads <= 32; nrThreads=nrThreads*2) {
+		for (int nrThreads = 1; nrThreads <= 32; nrThreads = nrThreads+2) {
 
 			// create a nodeProcessor with the requried number of parallel threads
 			NodeProcessor nodeProcessor(&calculator, nrThreads, &stopFlag, &nodes);
@@ -482,30 +512,37 @@ int main()
 			}
 
 
-			test(to_string(nrThreads) + "_threads_random", &nodes_random_multi, &nodeProcessor, &report, fileBasket, &outputVariableNames, &outputIndx, 1, false);
+			test("", &nodes_random_multi, &nodeProcessor, &report, fileBasket, &outputVariableNames, &outputIndx, 1, false);
 			
 			// to demonstrate what happens if we do not refresh the nodes, we can redo the calculations without refreshing
-			test(to_string(nrThreads) + "_threads_random", &nodes_random_multi, &nodeProcessor, &report, fileBasket, &outputVariableNames, &outputIndx, 1, false);
-			test(to_string(nrThreads) + "_threads_random", &nodes_random_multi, &nodeProcessor, &report, fileBasket, &outputVariableNames, &outputIndx, 0, false);
+			//test("", &nodes_random_multi, &nodeProcessor, &report, fileBasket, &outputVariableNames, &outputIndx, 1, false);
+			//test("", &nodes_random_multi, &nodeProcessor, &report, fileBasket, &outputVariableNames, &outputIndx, 0, false);
 
 			nodeProcessor.pleaseStop();
+			if (nrThreads == 1) {
+				nrThreads = 0;
+			}else if (nrThreads >= 16) {
+				nrThreads = nrThreads + 2;
+			}
 
 		}
 		
 
 		report.close();
 
+		*/
+
 
 		// cleaning up some memory (in Java this is not necessary, so may be we forgot some)
 		for (int i = 0; i < nodes.size(); i++) {
 			delete nodes.at(i);
 		}
-		for (int i = 0; i < nodes_random_single.size(); i++) {
-			delete nodes_random_single.at(i);
-		}
-		for (int i = 0; i < nodes_random_multi.size(); i++) {
-			delete nodes_random_multi.at(i);
-		}
+//		for (int i = 0; i < nodes_random_single.size(); i++) {
+//			delete nodes_random_single.at(i);
+//		}
+//		for (int i = 0; i < nodes_random_multi.size(); i++) {
+//			delete nodes_random_multi.at(i);
+//		}
 
 
      }

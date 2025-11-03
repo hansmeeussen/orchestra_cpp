@@ -57,7 +57,7 @@ namespace orchestracpp
 			}
 		}
 
-		minTolOrgValue = minTol->getValue();
+		//minTolOrgValue = minTol->getValue();
 
 		if (tolerance == nullptr) {
 			tolerance = variables->get("tolerance");
@@ -171,10 +171,10 @@ namespace orchestracpp
 			initialiseIterationReport();
 		}
 
-//		if (firstIteration2)
-//		{
-//			initialiseIterationReport2();
-//		}
+		if (firstIteration2)
+		{
+			initialiseIterationReport2();
+		}
 
 		int nrMineralIteration = 0;
 		bool mintolflipped = false;
@@ -274,12 +274,12 @@ namespace orchestracpp
 			iterationReport->close();
 			monitor = false;
 		}
-
-//		if ((firstIteration2) && (iterationReport != nullptr))
-//		{
-//			iterationReport->close();
-//			firstIteration2 = false;
-//		}
+//* Monitor
+		if ((firstIteration2) && (iterationReport != nullptr))
+		{
+			iterationReport->close();
+			firstIteration2 = false;
+		}
 
 
 	}
@@ -306,13 +306,13 @@ namespace orchestracpp
 				{
 					if ((monitor) && (iterationReportWriter != nullptr))
 					{
-						writeIterationReportLine(nrIter);
+						writeIterationReportLine(nrIter0);
 					}
 
-//					if ((firstIteration2) && (iterationReportWriter != nullptr))
-//					{
-//						writeIterationReportLine2(totalNrIter);
-//					}
+					if ((firstIteration2) && (iterationReportWriter != nullptr))
+					{
+						writeIterationReportLine2(nrIter0);
+					}
 
 					calculateJacobian();
 					adaptEstimations();
@@ -389,14 +389,15 @@ namespace orchestracpp
 
 		iterationReport->write("\n");
 	}
-	/*
+	
 	void UnEqGroup::initialiseIterationReport2()// throw(IOException)
 	{
+		nrReportLines2 = 0;
 		iterationReport = FileBasket::getFileWriter(nullptr, "iterationcpp.dat");
 		iterationReport->write(variables->getVariableNamesLine());
 		iterationReport->write('\n');
 	}
-	*/
+	
 	void UnEqGroup::writeIterationReportLine(double nrIter) //throw(IOException, OrchestraException)
 	{
 		if (totalNrIter > 1000)
@@ -462,7 +463,7 @@ namespace orchestracpp
 				}
 			}
 
-			uneq->calculateCentralResidual();
+			uneq->calculateCentralResidual(); 
 
 			try
 			{
@@ -475,16 +476,17 @@ namespace orchestracpp
 		}
 		iterationReport->write("\n");
 	}
-	/*
+	
 	void UnEqGroup::writeIterationReportLine2(double nrIter) //throw(IOException, OrchestraException)
 	{
-		if (nrIter > 120) {
+		if (nrReportLines2 > 20) {
 			return;
 		}
+		nrReportLines2++;
 		iterationReport->write(variables->getVariableValuesLine());
 		iterationReport->write('\n');
     }
-    */
+    
 
 	void UnEqGroup::calculateJacobian()// throw(OrchestraException)
 		{

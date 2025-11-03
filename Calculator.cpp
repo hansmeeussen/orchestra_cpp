@@ -51,6 +51,7 @@ namespace orchestracpp
 			StringWriter tmpwriter;
 			Expander expander;
 			OrchestraReader tmpReader(text);
+			IO::print("Expanding calculator input text .... ");
 			expander.expand(&tmpReader, &tmpwriter, name->basket);
 			expandedText = tmpwriter.toString();
 
@@ -64,6 +65,7 @@ namespace orchestracpp
 			//writer.write(expandedText);
 			//writer.close();
 			
+			IO::print("Reading system from expanded text .... ");
 			readSystemFromExpandedInput(expandedText);
 			//IO::print(expandedText);
 		}
@@ -107,7 +109,7 @@ namespace orchestracpp
 	{
 		auto t0 = high_resolution_clock::now();
 
-		IO::print("\tReading variables .... ");
+		IO::print("Reading variables.... ");
 		OrchestraReader tmpReader(text);
 		readVariablesAndExpressions(&tmpReader);
 
@@ -139,6 +141,15 @@ namespace orchestracpp
 
 				if ((word == "@var:") || (word == "var:")) {
 					variables->readOne(infile);
+				}
+				else if (word == "@const:") {
+					ParameterList pl(infile);
+					if (pl.size() == 1) {
+						variables->get(pl.get(0))->immutable = true;
+					}
+					else if (pl.size() == 2) {
+						(variables->addVariable(pl.get(0), pl.getDouble(1)))->immutable = true;
+					}
 				}
 				else if (word == "@globalvar:") {
 					variables->addToGlobalVariables(variables->readOne(infile));
@@ -305,19 +316,31 @@ namespace orchestracpp
 				if (calculationSuccessful)
 				{
 					IO::println("First calculation was successful!");
+				//	IO::print("Nr iterations: "); 
+				//	std::cout << uneqs->getTotalNrIter()<<std::endl;
 					IO::println("Repeat calculation with iia switched on..");
 					uneqs->switchOnIIA();
 					calculationSuccessful = startTryCalc(localLastSuccessfulNode, node); //**************************************
 					if (calculationSuccessful)
 					{
 						IO::println("This was successful!!");
+				//		IO::print("Nr iterations: ");
+				//		std::cout << uneqs->getTotalNrIter() << std::endl;
 					}
 
 					// repeat calculation with the original node
 					// with updated start estimations
 					copyUnknowns(node, originalNode);
 					calculationSuccessful = startTryCalc(localLastSuccessfulNode, originalNode); //**************************************
+
+				//	IO::print("Nr iterations: ");
+				//	std::cout << uneqs->getTotalNrIter() << std::endl;
+
+
+
 					node->clone(originalNode);
+
+
 
 				}
 				else
@@ -524,7 +547,9 @@ namespace orchestracpp
 			IO::print("Optimizing expressions of " + name->name + "..... ");
 			
 			variables->optimizeExpressions(expressions->parser);
-			
+
+			IO::print("Ready optimizing expressions of " + name->name + "..... ");
+
 			auto t1 = high_resolution_clock::now();
 			auto duration = duration_cast<milliseconds>(t1 - t0).count();
 			IO::print(StringHelper::toString((double)duration / 1000.0));	IO::println(" sec.");
@@ -542,9 +567,9 @@ namespace orchestracpp
 
 		// if total number of iterations == 0? do we have succes?
 
-		if (totNrIterations == 0) {
-			success = false;
-		}
+	//	if (totNrIterations == 0) {
+	//		success = false;
+	//	}
 
 		//do we copy results to global node if not successful?
 		if (success)
@@ -565,6 +590,10 @@ namespace orchestracpp
 			}
 			to->setValue(n, from->getvalue(n));
 		}
+
+		// may be we should also copy minTol when we copy unknowns
+		// but value will be 0
+		//to->setValue(from->nodeType->index("minTol"), 0);
 	}
 
 	std::unordered_map <std::string, std::string>* Calculator::getSynonyms() {

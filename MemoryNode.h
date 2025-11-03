@@ -24,6 +24,7 @@ namespace orchestracpp
 		bool needsEvaluation = true;
 	private:
 		double lastValue = 0;
+		bool dependentMemoryNodesDone = false;
 	public:
 		ExpressionNode *child = nullptr;
 		int nrReferences = 0;

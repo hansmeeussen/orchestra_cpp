@@ -52,6 +52,8 @@ namespace orchestracpp
 
 		virtual bool isNumber();
 
+		virtual bool isaNumber(const std::string);
+
         virtual Var *isVariable(VarGroup *variables);
 
 		virtual std::string getExpression();

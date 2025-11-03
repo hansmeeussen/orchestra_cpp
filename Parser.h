@@ -65,7 +65,7 @@ namespace orchestracpp
 
 		~Parser()
 		{
-			std::cout << "Deleting all "<< allExpressionNodes.size() <<" expression nodes " << std::endl;
+			//std::cout << "Deleting all "<< allExpressionNodes.size() <<" expression nodes " << std::endl;
 			for (auto n : allExpressionNodes) {
 				delete n;
 			}

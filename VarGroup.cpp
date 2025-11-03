@@ -7,18 +7,24 @@
 namespace orchestracpp
 {
 
-	Var *VarGroup::readOne(OrchestraReader *in)// throw(ReadException, IOException)
+	Var* VarGroup::readOne(OrchestraReader* in)// throw(ReadException, IOException)
 	{
 		std::string name = in->readWord();
 		double value = in->readDouble();
 
-		Var *tmp = get(name);
+		return addVariable(name, value);
+	}
+
+
+	Var* VarGroup::addVariable(std::string name, double value)// throw(ReadException, IOException)
+	{
+		Var* tmp = get(name);
 
 		if (tmp == nullptr)
 		{ // variable does not exist so create new one
 			tmp = new Var(name, value);
 			variables.insert(tmp);
-			variableIndx[name] = tmp;			
+			variableIndx[name] = tmp;
 		}
 		else
 		{
@@ -26,7 +32,9 @@ namespace orchestracpp
 			tmp->setValue(value);
 		}
 		return tmp;
-	}
+    }
+
+
 
 	void VarGroup::createSynonym(OrchestraReader *in) //throw(ReadException, IOException)
 	{
@@ -119,7 +127,7 @@ namespace orchestracpp
 		return &synonyms;
 	}
 
-/*
+
 	std::string VarGroup::getVariableNamesLine()
 	{
 		std::string line;
@@ -134,7 +142,7 @@ namespace orchestracpp
 
         for (auto n : alphabeticVariableNames) {
 			Var* v = get(n);
-            line += IO::format(v->name, 20);
+            line += IO::format(v->name, 30);
             line += '\t';
          }
 
@@ -155,12 +163,12 @@ namespace orchestracpp
 
 		for (auto n : alphabeticVariableNames) {
 			Var* v = get(n);
-			line += IO::format(v->getValue(), 20, 12);
+			line += IO::format(v->getValue(), 30, 12);
             line += IO::format("\t", 2);
 		}
 
 		return line;
 
 	}
-*/
+
 }

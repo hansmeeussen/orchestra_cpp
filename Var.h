@@ -25,7 +25,9 @@ namespace orchestracpp
 		double value = 0;
 	public:
 		MemoryNode *memory = nullptr;
-		std::vector<MemoryNode*> newDependentMemoryNodes;
+	//	std::vector<MemoryNode*> newDependentMemoryNodes;
+		// a set automatically prevents duplicate values
+		std::unordered_set<MemoryNode*> dependentMemoryNodes;
 		
 	public:   
 		std::string name;
@@ -33,8 +35,10 @@ namespace orchestracpp
 		bool isEquation = false; // this variable is used as equation output/input
 		bool isUnknown  = false;
 		bool usedForIO  = false; // this variable is used for IO between cell and calculator
+
+		bool immutable = false;
 	
-		//bool usedAsExpressionResult = false;
+		bool usedAsExpressionResult = false;
 		// public boolean usedAsExpressionInput  = false;
 		// we should only allow variables to be used as result until they are
 		// used as input.

@@ -38,7 +38,9 @@ namespace orchestracpp
 			double minTolOrgValue = 0;
 			Var *tolerance = nullptr;
 
-			//bool firstIteration2 = true; // if we set this at false, no iteration report is written 
+			bool firstIteration2 = false; // if we set this at false, no iteration report is written 
+
+			int nrReportLines2 = 0;
 
 			virtual ~UnEqGroup()
 			{

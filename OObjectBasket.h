@@ -38,6 +38,9 @@ namespace orchestracpp
 		 */
 		virtual ~OObjectBasket()
 		{
+			for (auto pair : newObjects) {
+				delete pair.second;
+    		}
 		}
 
 		virtual OObject *addObject(OrchestraReader *in) /*throw(IOException)*/;

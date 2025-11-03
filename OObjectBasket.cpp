@@ -29,10 +29,13 @@ namespace orchestracpp
 
 //		std::cout << "adding object: " << obj->getName() << std::endl << obj->getPlaceholders() << std::endl << obj->getBodytext() << std::endl;
 
-		// we should remove or overwrite existing objecs
+		// we should remove or overwrite existing objects?? 
 
-	
+
+	    // we should delete the overwritten object if this exists
+
 		newObjects.erase(obj->getKey());
+
 		newObjects.emplace(obj->getKey(), obj);
 		//newObjects.insert(obj->getKey(), obj);
 		objectNames.emplace(obj->getName());

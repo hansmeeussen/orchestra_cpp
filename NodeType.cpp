@@ -241,7 +241,7 @@ namespace orchestracpp
 		for (auto variable : *calculator->getGlobalVariables()) { // is this a list of strings?
 
 			std::string name = variable->name;
-			if (StringHelper::startsWith(name, "1.") || StringHelper::startsWith(name, "2.")) {
+			if (StringHelper::startsWith(name, "1.") || StringHelper::startsWith(name, "2."))   {
 				name = name.substr(2); // is this correctly translated?
 			}
 			addVariable(name, variable->getIniValue(), false, calculator->name->name); // name points to a FileID

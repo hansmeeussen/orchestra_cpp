@@ -182,20 +182,30 @@ namespace orchestracpp
 	{
 		readDocumentation(in);
 		bodytext = bodytext + readBodytext(in);
-		initialiseTextPointers();
+		textPointers.clear();
+		//initialiseTextPointers();
 	}
 
 	void OObject::insert(OrchestraReader *in) //throw(IOException)
 	{
 		readDocumentation(in);
 		bodytext = readBodytext(in) + bodytext;
-		initialiseTextPointers();
+		textPointers.clear();
+		//initialiseTextPointers();
 	}
 
 	void OObject::initialiseTextPointers()
 	{
 		// we should clear the list of textpointers in the C++ version
 		// The java version simply creates a new one.
+		// we should not only clear the list, but also delete the contents
+
+		for (auto p : deleteableTextPointers) {
+			delete p;
+		}
+
+		deleteableTextPointers.clear();
+
 		textPointers.clear();
 
 		std::string tmptext = StringHelper::trim(bodytext);
@@ -218,6 +228,7 @@ namespace orchestracpp
 		for (int n = 0; n < placeholders->size(); n++)
 		{
 			tmptext = StringHelper::replace(tmptext, "<" + placeholders->get(n) + ">", splitToken + placeholders->get(n) + splitToken);
+			delete placeHolderPointer[n]; // can be zero
 			placeHolderPointer[n] = new OObjectPieceOfText("?");
 		}
 			   
@@ -247,7 +258,12 @@ namespace orchestracpp
 
 			if (!tokenIsParameter)
 			{
-				textPointers.push_back(new OObjectPieceOfText(token));
+				// we create a new piece of text here, that should be deleted 
+				// 
+				OObjectPieceOfText* Opt = new OObjectPieceOfText(token);
+				textPointers.push_back(Opt);
+                deleteableTextPointers.push_back(Opt);
+
 			}
 
 		}

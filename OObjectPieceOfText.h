@@ -11,7 +11,9 @@ namespace orchestracpp
 		std::string text;
         
 		OObjectPieceOfText(const std::string &text);
-       // virtual ~OObjectPieceOfText(){};
+      //  virtual ~OObjectPieceOfText(){
+	//		delete &text;
+	//	};
 
     };
 }

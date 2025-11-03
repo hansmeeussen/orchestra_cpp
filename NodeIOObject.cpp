@@ -25,7 +25,11 @@ namespace orchestracpp
 				if (std::find(usedVars.begin(), usedVars.end(), local) == usedVars.end())
 				{ // is not yet used
 					usedVars.push_back(local);
-					nodeIOPairs.push_back(new NodeIOPair (local, index));
+					//nodeIOPairs.push_back(new NodeIOPair (local, index));
+
+					toGlobalList.push_back(new NodeIOPair(local, index));
+					toLocalList.push_back(new NodeIOPair(local, index));
+
 				}
 			}
 			index++;
@@ -35,14 +39,18 @@ namespace orchestracpp
 
 	void NodeIOObject::copyToLocal(Node *globalNode)
 	{
-		for (auto p : nodeIOPairs) {
-			p->copyFromNode(globalNode);
+		for (auto p : toLocalList) {
+			if (!p->localVar->immutable) { // we skip variables that are defined as constants in the calculator
+				//if (!p->localVar->usedAsExpressionResult) {
+					p->copyFromNode(globalNode);
+				//}
+			}
 		}
 	}
 
 	void NodeIOObject::copyToGlobal(Node *globalNode)
 	{
-		for (auto p : nodeIOPairs) {
+		for (auto p : toGlobalList) {
 			p->copyToNode(globalNode);
 		}
 	}
@@ -50,7 +58,7 @@ namespace orchestracpp
 	void NodeIOObject::copyToGlobalFromCalculator(Node *globalNode)
 	{
 		// we could make it a bit more efficient by weeding out unnecessary pairs
-		for (auto p : nodeIOPairs) {
+		for (auto p : toGlobalList) {
 			if (!p->localVar->isEquation) {
 				p->copyToNode(globalNode);
 			}

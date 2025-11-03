@@ -71,28 +71,39 @@ namespace orchestracpp
 		{
 			if ((currentToken[currentToken.length() - 1] == 'e') || (currentToken[currentToken.length() - 1] == 'E'))
 			{
-				try
-				{ // make sure that this nextToken represents a number
+			//	try
+			//	{ // make sure that this nextToken represents a number
 					//static_cast<Double>(currentToken.substr(0,(currentToken.length() - 1)));
 					// this was a number ending with a single "e"
 
 					// try to read string (minus last character) into double
-					double test = std::stod(currentToken.substr(0, (currentToken.length() - 1)));
-			//		if (((std::isnan(test)) || std::isinf(test))) {
+					//double test = std::stod(currentToken.substr(0, (currentToken.length() - 1)));
+					
+				if (isaNumber(currentToken.substr(0, (currentToken.length() - 1)))) {
+					currentToken = currentToken + tokenizer->nextToken();
+					currentToken = currentToken + tokenizer->nextToken();
+				}
+				else {
+					//This was not a number, simply return nextToken
+				}
 
-			//		}
-			//		else {
+/*
+					if (((std::isnan(test)) || std::isinf(test))) {
+
+					}
+					else {
 
 					// this worked, so was a number
 
 					    currentToken = currentToken + tokenizer->nextToken();
 					    currentToken = currentToken + tokenizer->nextToken();
-				  //  }
+				    }
 				}
                 catch (const std::invalid_argument& ia)
 				{
 					//This was not a number, simply return nextToken
 				}
+				*/
 				
 			}
 		}
@@ -183,18 +194,40 @@ namespace orchestracpp
 		// nantokite
 		// NaNO3-
 
+//		long double ld;
+//		if ((std::istringstream(currentToken) >> ld >> std::ws).eof()) {
+//
+//			//IO::showMessage("This is a number " + currentToken);
+//
+//			return true;
+//		}
+//		else {
+//			return false;
+//		}
+
+		return isaNumber(currentToken);
+	}
+
+	bool ParserStringTokenizer::isaNumber(const std::string s) {
 		long double ld;
-		if ((std::istringstream(currentToken) >> ld >> std::ws).eof()) {
+		return((std::istringstream(s) >> ld >> std::ws).eof());
 
-			//IO::showMessage("This is a number " + currentToken);
-
+		/*
+		long double ld;
+		if ((std::istringstream(s) >> ld >> std::ws).eof()) {
 			return true;
 		}
 		else {
 			return false;
 		}
+		*/
+		// Return true on valid
+	//	bool valid_string_to_double(const char* s) {
+	//		char* end;
+	//		strtod(s, &end);
+	//		return s != end;
+		
 	}
-
 
 	Var *ParserStringTokenizer::isVariable(VarGroup *variables)
 	{

@@ -47,7 +47,9 @@ namespace orchestracpp
 
 		VarGroup() {}
 
-		virtual Var *readOne(OrchestraReader *in)/* throw(ReadException, IOException)*/;
+		virtual Var* readOne(OrchestraReader* in)/* throw(ReadException, IOException)*/;
+
+		virtual Var* addVariable(std::string name, double value)/* throw(ReadException, IOException)*/;
 
 		virtual void createSynonym(OrchestraReader *in) /*throw(ReadException, IOException)*/;
 
@@ -75,9 +77,9 @@ namespace orchestracpp
 		virtual std::unordered_map <std::string, std::string>* getSynonyms();
 
 //**  only used for testing
-//		virtual std::string getVariableNamesLine();
+		virtual std::string getVariableNamesLine();
 
-//		virtual std::string getVariableValuesLine();
+		virtual std::string getVariableValuesLine();
 
 
 

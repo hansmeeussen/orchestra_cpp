@@ -22,7 +22,10 @@ namespace orchestracpp
 	void MemoryNode::setDependentMemoryNode(MemoryNode *parent)
 	{
 		child->setDependentMemoryNode(parent);
-		child->setDependentMemoryNode(this);
+		if (!dependentMemoryNodesDone) {
+			child->setDependentMemoryNode(this);
+			dependentMemoryNodesDone = true;
+		}
 	}
 
 	bool MemoryNode::constant()

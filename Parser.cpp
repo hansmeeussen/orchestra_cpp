@@ -83,10 +83,11 @@ namespace orchestracpp
 			throw ParserException("Could not find variable: " + expression->resultVariableName + " when parsing " + expression->expression);
 		}
 
-		//resultVariable->usedAsExpressionResult = true;
+		resultVariable->usedAsExpressionResult = true;
 
 		// each new result variable gets a memory node
 		// this memory node may be removed during optimization when this variable is only used once.
+
 		resultVariable->memory = new MemoryNode(parse(expression->getExpression()));
 		newNode(resultVariable->memory); // register this node for deletion
 
@@ -296,11 +297,12 @@ namespace orchestracpp
 			}
 		}
 		
-		throw ParserException("Variable or number expected but found: '" + stream->getCurrentToken() + "'" +stream->getExpression());
+		throw ParserException("Variable or number expected but found: '" + stream->getCurrentToken() + "'     In expression: " +stream->getExpression());
 	}
 
 	BExpressionNode *Parser::parseBElement(ParserStringTokenizer *stream)// throw(ParserException)
 	{
+		/* removed 8/8/2025
 		if (stream->match("("))
 		{
 			stream->consume();
@@ -320,6 +322,8 @@ namespace orchestracpp
 			stream->consume();
 			return newBNode(new Not((parseBElement(stream))));
 		}
+
+		*/
 
 		ExpressionNode *left = parseSum(stream);
 
@@ -355,7 +359,7 @@ namespace orchestracpp
 			if (stream->match("="))
 			{
 				stream->consume();
-				return new EQNode(left, parseSum(stream));
+				return newBNode(new EQNode(left, parseSum(stream)));
 			}
 		}
 

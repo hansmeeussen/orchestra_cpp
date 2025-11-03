@@ -74,6 +74,8 @@ namespace orchestracpp
 										// we expand the input, but do not write text to the output
 										IO::println("Scanning file: " + filename);
 										expand(&includeFile, &sw, fileBasket);
+										IO::println("Ready Scanning file: " + filename);
+
 									}
 									else {
 										IO::println("Including file: " + filename);
@@ -139,23 +141,25 @@ namespace orchestracpp
 							if (parameters.size() == 1)
 							{
 								std::string expression = parameters.get(0);
-								StringWriter    *sw = new StringWriter();
-								OrchestraReader *sr = new OrchestraReader(expression);
+								//StringWriter    *sw = new StringWriter();
+								StringWriter sw;
+								//OrchestraReader *sr = new OrchestraReader(expression);
+								OrchestraReader sr(expression);
 							
 								// we expand the expressionstring before evaluating
-								expand(sr, sw, fileBasket);
+								expand(&sr, &sw, fileBasket);
 								try
 								{
-									out->write(StringHelper::toString(Parser::evaluate(sw->toString())));
+									out->write(StringHelper::toString(Parser::evaluate(sw.toString())));
 								}
 								catch (OrchestraException  e)
 								{
 									IO::showMessage("Something went wrong trying to evaluate expression: " + expression + " " + e.what());
-									delete sw;
-									delete sr;
+								//	delete sw;
+								//	delete sr;
 								}
-								delete sw;
-								delete sr;
+								//delete sw;
+								//delete sr;
 							}
 						}
      					else if (lcword == "orchestraversion:")

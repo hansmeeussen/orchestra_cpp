@@ -31,7 +31,10 @@ namespace orchestracpp
 	{
 
 	private:
-		std::vector<NodeIOPair*> nodeIOPairs = std::vector<NodeIOPair*>();
+		//std::vector<NodeIOPair*> nodeIOPairs = std::vector<NodeIOPair*>();
+		// we now (July 2025) have two different lists for two different directions
+		std::vector<NodeIOPair*> toLocalList = std::vector<NodeIOPair*>();
+		std::vector<NodeIOPair*> toGlobalList = std::vector<NodeIOPair*>();
 		/**
 		 * During the link phase a new IOObject is created for each variable that
 		 * exists both in the node and in the local set of variables. These
@@ -41,7 +44,10 @@ namespace orchestracpp
 	public:
 		virtual ~NodeIOObject()
 		{
-			for (auto pair : nodeIOPairs) {
+			for (auto pair : toLocalList) {
+				delete pair;
+			}
+			for (auto pair : toGlobalList) {
 				delete pair;
 			}
 		}
