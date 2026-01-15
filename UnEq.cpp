@@ -167,7 +167,7 @@ namespace orchestracpp
 
 
         // this one was used until March2020
-		void UnEq::ddetermineDeltaUnknown()
+		void UnEq::dddetermineDeltaUnknown()
 		{
 			// so we use relative delta until close to zero
 			// then we use min delta
@@ -195,7 +195,7 @@ namespace orchestracpp
 
 
 			if (un_type == lin) {
-				if (unknown->getIniValue() > 0) {
+				if (unknown->getIniValue() >= 0) {
 					un_delta = 1e-3;
 				}
 				else {

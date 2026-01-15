@@ -93,7 +93,7 @@ namespace orchestracpp
 		     */
 			virtual void determineDeltaUnknown();
 
-			virtual void ddetermineDeltaUnknown();
+			virtual void dddetermineDeltaUnknown();
 
 
 

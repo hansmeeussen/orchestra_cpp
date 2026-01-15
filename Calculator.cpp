@@ -210,7 +210,11 @@ namespace orchestracpp
 				else if (word == "@silent:") {
 					silent = true;
 				}
-						
+				else if (word == "@monitoriteration:") {
+					uneqs->firstIteration2 = true;
+					uneqs->iterationmonitorlines = infile->readInt();
+				}
+
 			}
 
 			nrIterVar = variables->get("nr_iter");
@@ -316,16 +320,16 @@ namespace orchestracpp
 				if (calculationSuccessful)
 				{
 					IO::println("First calculation was successful!");
-				//	IO::print("Nr iterations: "); 
-				//	std::cout << uneqs->getTotalNrIter()<<std::endl;
+					IO::print("Nr iterations: "); 
+					std::cout << uneqs->getTotalNrIter()<<std::endl;
 					IO::println("Repeat calculation with iia switched on..");
 					uneqs->switchOnIIA();
 					calculationSuccessful = startTryCalc(localLastSuccessfulNode, node); //**************************************
 					if (calculationSuccessful)
 					{
 						IO::println("This was successful!!");
-				//		IO::print("Nr iterations: ");
-				//		std::cout << uneqs->getTotalNrIter() << std::endl;
+						IO::print("Nr iterations: ");
+						std::cout << uneqs->getTotalNrIter() << std::endl;
 					}
 
 					// repeat calculation with the original node
@@ -333,14 +337,10 @@ namespace orchestracpp
 					copyUnknowns(node, originalNode);
 					calculationSuccessful = startTryCalc(localLastSuccessfulNode, originalNode); //**************************************
 
-				//	IO::print("Nr iterations: ");
-				//	std::cout << uneqs->getTotalNrIter() << std::endl;
-
-
+			    	IO::print("Nr iterations: ");
+				 	std::cout << uneqs->getTotalNrIter() << std::endl;
 
 					node->clone(originalNode);
-
-
 
 				}
 				else

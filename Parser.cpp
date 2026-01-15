@@ -376,8 +376,8 @@ namespace orchestracpp
 		/* convert string to double and back to assure standard format of string (1.0 1 1.000) */
 		double tmpNumber = std::stod(nameIn);
         // convert double to string
-	    // be careful: standard C++ dtos has too low accuracy!
-		std::string name = StringHelper::doubleToString(tmpNumber, 12);
+	    // be careful: standard C++ dtos has too low precision!
+		std::string name = StringHelper::doubleToString(tmpNumber, 14);
 	
 		if (parser->constants.find(name) != parser->constants.end())
 		{ //  this constant already exists,

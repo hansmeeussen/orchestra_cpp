@@ -20,7 +20,7 @@
 // This demonstration program shows how the ORCHESTRA chemical solver can be used from other codes.
 // 
 //
-// Hans Meeussen, Februari, 2025
+// Hans Meeussen, Januari, 2026
 //
 //
 // The following ORCHESTRA object classes are used: 
@@ -157,7 +157,7 @@ int main()
 
 	try {
 
-		IO::println("**** ORCHESTRA C++ chemical solver demonstration program, Version 23 Januari 2025");
+		IO::println("**** ORCHESTRA C++ chemical solver demonstration program, Version 6 Januari 2026");
 
 		//--------------------------------------------------------------------------------------------------------------------------
 		// 1: First we create a NodeType object
@@ -362,14 +362,33 @@ int main()
 		}
 		fw.write("\n");
 
-		// now we can do the calculations without a node processor
+		// we do a first calculation to intialize the calculator
+//		for (int i = 0; i < inputIndx.size(); i++) {
+//			nodes[0]->setValue(inputIndx[i], nodes[0]->getvalue(inputIndx[i]));
+//		}
+//		bool success = calculator.calculate(nodes[0], &stopFlag);
+
+
+
+
+		auto t0 = high_resolution_clock::now();
+		
+		// now we can do the calculations
 		for (int n = 0; n < nodes.size(); n++) {
 
 			for (int i = 0; i < inputIndx.size(); i++) {
 				nodes[0]->setValue(inputIndx[i], nodes[n]->getvalue(inputIndx[i]));
 			}
-			
-			calculator.calculate(nodes[0], &stopFlag);
+			// can we check whether calculation was succesfull?
+			bool success = calculator.calculate(nodes[0], &stopFlag);
+
+			if (!success) {
+				IO::println(" Failed calculation: "+n);
+
+			}
+			else {
+				IO::print(".");
+			}
 
 			for (int i = 0; i < outputIndx.size(); i++) {
 				fw.write(StringHelper::doubleToString(nodes.at(0)->getvalue(outputIndx.at(i)), 18));
@@ -379,8 +398,17 @@ int main()
 
 		}
 
-
 		fw.close();
+
+
+		auto t1 = high_resolution_clock::now();
+		// determine the calculation time
+		auto duration = duration_cast<milliseconds>(t1 - t0).count();
+		if (duration < 1)duration = 1;
+
+		IO::print("Calculation time: ");
+		cout << duration << endl;
+
 
 
 

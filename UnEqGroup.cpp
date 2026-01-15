@@ -16,39 +16,84 @@ namespace orchestracpp
 		this->variables = variables;
 	}
 
+	/**
+     * This method is called AFTER all uneqs are added. and BEFORE each level1
+     * iteration. It dimensions the jacobian arrays according to the number of
+     * active uneqs.
+     */
+
 	void UnEqGroup::initialise()
 	{
-		int olddim = nrActiveUneqs;
-		nrActiveUneqs = 0;
 
+		//std::cout << "Initialise! \n";
 		// is it necessary to re-create this array for each iteration?
 		// or can we create one that is large enough once?
 		if (activeUneqs.empty())
 		{
-			activeUneqs.resize(uneqs.size() + 1);
+			activeUneqs.resize(uneqs.size());
 		}
 
 		// Create the list of active uneqs
+
+		// first we make initially all mineral uneqs inactive if their ini value <0
+		if (jacobian5 == nullptr) {
+			for (auto uneq : uneqs){
+				if (uneq->isType3){
+					uneq->active = uneq->unknown->getIniValue() > 0;
+				}
+			}
+		}
+
+		// we count the nr of active uneqs and add them to the active uneqs list
+		nrActiveUneqs = 0;
 		for (auto tmp : uneqs)
 		{
 			if (tmp->active)
 			{
-				activeUneqs[nrActiveUneqs + 1] = tmp;
+				activeUneqs[nrActiveUneqs] = tmp;
 				nrActiveUneqs++;
 			}
 		}
 
+		if (jacobian5 == nullptr) {
+			std::cout<<"Create initial Jacobian size: "<<nrActiveUneqs<<std::endl;
+		}
+
+		//std::cout << "The active uneqs:" << std::endl;
+		//for (int n = 0; n < nrActiveUneqs; n++) {
+		//	std::cout << activeUneqs[n]->unknown->name << std::endl;
+		//}
+
 		// dimension the jacobian matrix according to the number of active uneqs
 		// only create a new one if nr active uneqs has changed
-		if (nrActiveUneqs != olddim || jacobian.empty())
-		{
-			jacobian = *new std::vector<std::vector<double>>(nrActiveUneqs + 1);
-
-			for (int vector1 = 0; vector1 < (nrActiveUneqs + 1); vector1++)
-			{
-				jacobian[vector1] = std::vector<double>(nrActiveUneqs + 1);
-			}
+		if (nrActiveUneqs > olddim || jacobian5 == nullptr) {
+			std::cout << "Create Jacobian size: " << nrActiveUneqs << std::endl;
+			//delete existing one
+			if (jacobian5 != nullptr)delete []jacobian5;
+			jacobian5 = new double[nrActiveUneqs * nrActiveUneqs];
+			delete []vv;
+			vv = new double[nrActiveUneqs];
+			delete []indx;
+			indx = new int[nrActiveUneqs];
+			olddim = nrActiveUneqs;
+			//std::cout << "Printing initial jacobian:" << std::endl;
+			//printJacobian();
+			//std::cout << "Ready:" << std::endl;
 		}
+
+
+
+		// dimension the jacobian matrix according to the number of active uneqs
+		// only create a new one if nr active uneqs has changed
+//		if (nrActiveUneqs != olddim || jacobian.empty())
+//		{
+//			jacobian = *new std::vector<std::vector<double>>(nrActiveUneqs + 1);
+//
+//			for (int vector1 = 0; vector1 < (nrActiveUneqs + 1); vector1++)
+//			{
+//				jacobian[vector1] = std::vector<double>(nrActiveUneqs + 1);
+//			}
+//		}
 
 		if (minTol == nullptr) {
 			minTol = variables->get("minTol");
@@ -105,6 +150,22 @@ namespace orchestracpp
 
 	bool UnEqGroup::iterate(StopFlag *flag)
 	{
+/*
+		if (firstTimeCalled) {
+			firstTimeCalled = false;
+
+			jacobian2 = *new std::vector<std::vector<double>>(uneqs.size() + 1);
+
+			for (int vector1 = 0; vector1 < (uneqs.size() + 1); vector1++)
+			{
+				jacobian2[vector1] = std::vector<double>(uneqs.size() + 1);
+			}
+
+			// new code
+			jacdim = (uneqs.size() + 1);
+			jacobian5 = new double[jacdim * jacdim];
+		}
+*/
 		//originalMaxIter = maxIter;
 		totalNrIter = 1;
 
@@ -174,6 +235,9 @@ namespace orchestracpp
 		if (firstIteration2)
 		{
 			initialiseIterationReport2();
+
+			monitor = true;
+			initialiseIterationReport();
 		}
 
 		int nrMineralIteration = 0;
@@ -190,7 +254,7 @@ namespace orchestracpp
 			if (uneq->isType3)
 			{
 				nrOfMinerals++;
-				uneq->active = uneq->unknown->getValue() > 0;
+				uneq->active = uneq->unknown->getIniValue() > 0;
 			}
 		}
 		
@@ -201,7 +265,7 @@ namespace orchestracpp
 			nrMineralIteration++;
 			bool mineralCompositionChanged = false;
 
-			nrIter = iterateLevel0(iterationReport, flag); // <------------------------------------------
+			nrIter = iterateLevel0(flag); // <------------------------------------------
 
 			// if nrIter = maxNrIter, then we did not find convergence, what are doing with this info?
 			
@@ -272,19 +336,21 @@ namespace orchestracpp
 		if ((monitor) && (iterationReport != nullptr))
 		{
 			iterationReport->close();
+			iterationReport = nullptr;
 			monitor = false;
 		}
-//* Monitor
-		if ((firstIteration2) && (iterationReport != nullptr))
+
+		if ((firstIteration2) && (iterationReport2 != nullptr))
 		{
-			iterationReport->close();
+			iterationReport2->close();
+			iterationReport2 = nullptr;
 			firstIteration2 = false;
 		}
 
 
 	}
 
-	int UnEqGroup::iterateLevel0(Writer *iterationReportWriter, StopFlag *flag)
+	int UnEqGroup::iterateLevel0(StopFlag *flag)
 	{
 		int nrIter0 = 1;
 		initialise();
@@ -304,25 +370,26 @@ namespace orchestracpp
 			{
 				while ((howConvergent_field = howConvergent()) > 1)
 				{
-					if ((monitor) && (iterationReportWriter != nullptr))
+					if ((monitor) && (iterationReport != nullptr))
 					{
 						writeIterationReportLine(nrIter0);
 					}
 
-					if ((firstIteration2) && (iterationReportWriter != nullptr))
+					if ((firstIteration2) && (iterationReport2 != nullptr))
 					{
 						writeIterationReportLine2(nrIter0);
 					}
 
 					calculateJacobian();
 					adaptEstimations();
+
 					nrIter0++;
 					totalNrIter++;
 
 					if (flag != nullptr)
 					{
 						if (flag->cancelled)
-						{ // direct access of volatile variable is faster
+						{ 
 							nrIter0 = maxIter;
 							break;
 						}
@@ -354,7 +421,7 @@ namespace orchestracpp
 
 	void UnEqGroup::initialiseIterationReport()// throw(IOException)
 	{
-		iterationReport = FileBasket::getFileWriter(nullptr, "iteration.dat");
+		iterationReport = FileBasket::getFileWriter(nullptr, "iteration_cpp.dat");
 
 
 		Var* tmp = variables->get("Node_ID");
@@ -388,14 +455,6 @@ namespace orchestracpp
 		}
 
 		iterationReport->write("\n");
-	}
-	
-	void UnEqGroup::initialiseIterationReport2()// throw(IOException)
-	{
-		nrReportLines2 = 0;
-		iterationReport = FileBasket::getFileWriter(nullptr, "iterationcpp.dat");
-		iterationReport->write(variables->getVariableNamesLine());
-		iterationReport->write('\n');
 	}
 	
 	void UnEqGroup::writeIterationReportLine(double nrIter) //throw(IOException, OrchestraException)
@@ -477,21 +536,29 @@ namespace orchestracpp
 		iterationReport->write("\n");
 	}
 	
+	void UnEqGroup::initialiseIterationReport2()// throw(IOException)
+	{
+		nrReportLines2 = 0;
+		iterationReport2 = FileBasket::getFileWriter(nullptr, "iteration2_cpp.dat");
+		iterationReport2->write(variables->getVariableNamesLine());
+		iterationReport2->write('\n');
+	}
+
 	void UnEqGroup::writeIterationReportLine2(double nrIter) //throw(IOException, OrchestraException)
 	{
-		if (nrReportLines2 > 20) {
+		if (nrReportLines2 > iterationmonitorlines) {
 			return;
 		}
 		nrReportLines2++;
-		iterationReport->write(variables->getVariableValuesLine());
-		iterationReport->write('\n');
+		iterationReport2->write(variables->getVariableValuesLine());
+		iterationReport2->write('\n');
     }
     
 
 	void UnEqGroup::calculateJacobian()// throw(OrchestraException)
 		{
 
-			for (int i = 1; i <= nrActiveUneqs; i++)
+			for (int i = 0; i < nrActiveUneqs; i++)
 			{
 
 				// store the original unknown value
@@ -499,7 +566,7 @@ namespace orchestracpp
 				double originalUnknownValue = activeUneqs[i]->offsetUnknown();
 
 				// calculate the residuals for the offset of this unknown
-			    for (int m = 1; m <= nrActiveUneqs; m++) {
+			    for (int m = 0; m < nrActiveUneqs; m++) {
 			        activeUneqs[m]->calculateJResidual();
 			    }
 
@@ -507,18 +574,43 @@ namespace orchestracpp
 				activeUneqs[i]->resetUnknown(originalUnknownValue);
 
 				// calculate the jacobian values from the residuals
-				for (int fnr = 1; fnr <= nrActiveUneqs; fnr++)
+				for (int fnr = 0; fnr < nrActiveUneqs; fnr++)
 				{
-					jacobian[fnr][i] = (activeUneqs[fnr]->jacobianResidual - activeUneqs[fnr]->centralResidual) / activeUneqs[i]->un_delta;
+					//jacobian2[fnr][i] = (activeUneqs[fnr]->jacobianResidual - activeUneqs[fnr]->centralResidual) / activeUneqs[i]->un_delta;
+					jacobian5[nrActiveUneqs * fnr + i] = (activeUneqs[fnr]->jacobianResidual - activeUneqs[fnr]->centralResidual) / activeUneqs[i]->un_delta;
 				}
 			}
 
 		}
 
+
+	    void UnEqGroup::printJacobian() {
+			if (jacprinted) {
+				return;
+			}
+
+			jacprinted = true;
+
+
+    		//FileWriter* out = FileBasket::getFileWriter(nullptr, "jacobian_cpp.txt");
+
+			// new jacobian
+			for (int i = 0; i < nrActiveUneqs; i++) {
+				for (int j = 0; j < nrActiveUneqs; j++) {
+					//out->write(IO::format(jacobian2[i][j], 25, 8));
+					std::cout << IO::format(jacobian5[nrActiveUneqs * i + j], 25, 8);
+					//out->write(IO::format(jacobian5[nrActiveUneqs *i+j], 25, 8));
+				}
+				std::cout << std::endl;
+				//out->write("\n");
+			}
+		
+	    }
+
 		void UnEqGroup::adaptEstimations() //throw(OrchestraException)
 		{
 
-			ludcmp_plus_lubksb(jacobian, nrActiveUneqs + 1);
+			ludcmp_plus_lubksb_new(jacobian5, nrActiveUneqs);
 
 			/**
 			 * Determine the maximum common factor for changing the unknowns in the
@@ -529,9 +621,9 @@ namespace orchestracpp
 			commonfactor = 1;
 			double minimumfactor = 1e-5;
 
-			for (int m = 1; m <= nrActiveUneqs; m++)
+			for (int m = 0; m < nrActiveUneqs; m++)
 			{
-			// If  factor < 1, factor is reduced by checkunknownstep
+			    // If  factor < 1, factor is reduced by checkunknownstep
 				// we use the smallest factor to update all unknowns, so keep original 
 				// direction.
 				double factor = activeUneqs[m]->checkUnknownStep();
@@ -543,7 +635,10 @@ namespace orchestracpp
 				}
 			}
 
-			for (int m = 1; m <= nrActiveUneqs; m++)
+
+
+
+			for (int m = 0; m < nrActiveUneqs; m++)
 			{
 				if (activeUneqs[m]->factor < commonfactor)
 				{
@@ -563,7 +658,7 @@ namespace orchestracpp
 
 			double convergence = 0;
 
-			for (int m = 1; m <= nrActiveUneqs; m++)
+			for (int m = 0; m < nrActiveUneqs; m++)
 			{
 				activeUneqs[m]->calculateCentralResidual();
 				convergence = std::max(convergence, activeUneqs[m]->howConvergent());
@@ -572,10 +667,151 @@ namespace orchestracpp
 			return (convergence);
 		}
 
-		void UnEqGroup::ludcmp_plus_lubksb(std::vector<std::vector<double>> &jac2, int const dim)
+
+
+		void UnEqGroup::ludcmp_plus_lubksb_new(double* jac2, int const dim)
 		{
-			std::vector<double> vv(dim);
-			std::vector<int> indx(dim);
+			//double* vv = new double[dim];
+			//int* indx = new int[dim];
+
+
+			for (int i = 0; i < dim; i++)
+			{
+				double big = 0.0;
+				for (int j = 0; j < dim; j++)
+				{
+					double temp;
+					if ((temp = std::abs(jac2[dim*i+j])) > big)
+					{
+						big = temp;
+					}
+				}
+				if (big == 0.0)
+				{
+					return;
+				}
+				vv[i] = 1.0 / big;
+			}
+
+			for (int j = 0; j < dim; j++)
+			{
+				int imax = 0;
+
+				for (int i = 0; i < j; i++)
+				{
+					for (int k = 0; k < i; k++)
+					{
+						jac2[dim*i+j] -= jac2[dim*i+k] * jac2[dim*k+j];
+					}
+				}
+
+				double big = 0.0;
+				for (int i = j; i < dim; i++)
+				{
+					for (int k = 0; k < j; k++)
+					{
+						jac2[dim*i+j] -= jac2[dim*i+k] * jac2[dim*k+j];
+					}
+
+					double dum;
+					if ((dum = vv[i] * std::abs(jac2[dim*i+j])) >= big)
+					{
+						big = dum;
+						imax = i;
+					}
+				}
+				if (j != imax)
+				{
+					std::vector<double> dum;
+					//					double dum[];
+				//	dum = jac2[imax];
+				//	jac2[imax] = jac2[j];
+				//	jac2[j] = dum;
+
+				//	double dum2;
+				//	for (int c = 1; c < dim; c++) {
+			    //			dum2 = jac2[imax][c];
+				//		jac2[imax][c] = jac2[j][c];
+				//		jac2[j][c] = dum2;
+				//	}
+
+					// we have to swap columns manually
+					double dum2;
+					for (int c = 0; c < dim; c++) {
+						dum2 = jac2[imax * dim + c];
+						jac2[imax * dim + c] = jac2[j * dim + c];
+						jac2[j * dim + c] = dum2;
+					}
+
+					vv[imax] = vv[j];
+				}
+				indx[j] = imax;
+
+				//------------------            
+				if ((jac2[dim*j+j]) == 0.0)
+				{
+					//IO.showMessage("matrix is singular!");
+					//IO.println("Jacobian matrix is singular!");
+					jac2[dim*j+j] = 1e-30;
+				}
+				//------------------------------------------
+
+				if (j != dim - 1)
+				{
+					double dum = 1.0 / (jac2[dim*j+j]);
+					for (int i = j + 1; i < dim; i++)
+					{
+						jac2[dim*i+j] *= dum;
+					}
+				}
+			}
+
+
+			int ii = 0;
+			for (int i = 0; i < dim; i++)
+			{
+				int ip = indx[i];
+				double sum = activeUneqs[ip]->centralResidual;
+				activeUneqs[ip]->centralResidual = activeUneqs[i]->centralResidual;
+				if (ii != 0)
+				{
+					for (int j = ii-1; j < i; j++)
+					{
+						sum -= jac2[dim*i+j] * activeUneqs[j]->centralResidual;
+					}
+				}
+				else if (sum != 0)
+				{
+					ii = i+1;
+				}
+				activeUneqs[i]->centralResidual = sum;
+			}
+
+			for (int i = dim - 1; i >= 0; i--)
+			{
+				double sum = activeUneqs[i]->centralResidual;
+
+				for (int j = i + 1; j < dim; j++)
+				{
+					sum -= jac2[dim*i+j] * activeUneqs[j]->centralResidual;
+				}
+				activeUneqs[i]->centralResidual = sum / jac2[dim*i+i];
+
+			}
+
+			//delete []vv;
+			//delete []indx;
+		}
+
+
+		/*
+void UnEqGroup::ludcmp_plus_lubksb(std::vector<std::vector<double>> &jac2, int const dim)
+{
+//			std::vector<double> vv(dim);
+			double* vv = new double[dim];
+//			std::vector<int> indx(dim);
+			double* indx = new double[dim];
+
 
 			for (int i = 1; i < dim; i++)
 			{
@@ -625,16 +861,25 @@ namespace orchestracpp
 				if (j != imax)
 				{
 					std::vector<double> dum;
-//					double dum;
-					dum = jac2[imax];
-					jac2[imax] = jac2[j];
-					jac2[j] = dum;
+//					double dum[];
+				//	dum = jac2[imax];
+				//	jac2[imax] = jac2[j];
+			//		jac2[j] = dum;
+
+					// we can do this manually
+					double dum2;
+					for (int c = 1; c < dim; c++) {
+						dum2 = jac2[imax][c];
+						jac2[imax][c] = jac2[j][c];
+						jac2[j][c] = dum2;
+					}
+
 
 					vv[imax] = vv[j];
 				}
 				indx[j] = imax;
 
-				//------------------            
+				//------------------
 				if ((jac2[j][j]) == 0.0)
 				{
 				   //IO.showMessage("matrix is singular!");
@@ -652,6 +897,13 @@ namespace orchestracpp
 					}
 				}
 			}
+
+
+//			IO::println("-------- index \n");
+//			for (int m = 1; m < dim; m++) {
+//				IO::print(IO::format(indx[m], 25, 8));
+//			}
+//			IO::println("--------");
 
 			int ii = 0;
 			for (int i = 1; i < dim; i++)
@@ -673,14 +925,54 @@ namespace orchestracpp
 				activeUneqs[i]->centralResidual = sum;
 			}
 
+//			IO::println("-------- 1");
+//			for (int m = 1; m <= nrActiveUneqs; m++) {
+//				IO::print(IO::format(activeUneqs[m]->centralResidual, 25, 8));
+//			}
+//			IO::println("--------");
+
+
 			for (int i = dim - 1; i >= 1; i--)
 			{
 				double sum = activeUneqs[i]->centralResidual;
+
+//				IO::print("Sum = ");
+//				IO::println(IO::format(sum, 25, 8));
+
 				for (int j = i + 1; j < dim; j++)
 				{
+//					IO::print("Sum = ");
+//					IO::println(IO::format(sum, 25, 8));
 					sum -= jac2[i][j] * activeUneqs[j]->centralResidual;
+//					IO::print("Sum = ");
+//					IO::print(IO::format(sum, 25, 8));
+//					IO::print("  Jac i j = ");
+//					IO::print(IO::format(jac2[i][j], 25, 8));
+//					IO::print("  Res j = ");
+//					IO::println(IO::format(activeUneqs[j]->centralResidual, 25, 8));
+
+
 				}
 				activeUneqs[i]->centralResidual = sum / jac2[i][i];
+
+//				IO::println("-------- 2a");
+//				for (int m = 1; m <= nrActiveUneqs; m++) {
+//					IO::print(IO::format(activeUneqs[m]->centralResidual, 25, 8));
+//				}
+//				IO::println("--------");
 			}
+
+//			IO::println("-------- 2");
+//			for (int m = 1; m <= nrActiveUneqs; m++) {
+//				IO::print(IO::format(activeUneqs[m]->centralResidual, 25, 8));
+//			}
+//			IO::println("--------");
+
+
+			delete []vv;
+			delete []indx;
 		}
+		*/
+
+
 	}

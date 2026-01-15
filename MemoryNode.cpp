@@ -35,23 +35,20 @@ namespace orchestracpp
 
 	ExpressionNode *MemoryNode::optimize(Parser* parser)
 	{
-		if (isoptimized)
+		if (!isoptimized) // we do this only once
 		{
-			return this;
-		}
-		isoptimized = true;
+			child = child->optimize(parser);
+			isoptimized = true;
 
-		child = child->optimize(parser);
-
-		if (child->constant())
-		{
-			child = NumberNode::createNumberNode(evaluate(),parser);
-			return child;
+			if (child->constant())
+			{
+				child = NumberNode::createNumberNode(evaluate(), parser);
+			}
 		}
 
-		if (nrReferences <= 1)
-		{ // this effectively removes  memorynode
-			return child;
+
+		if (child->constant() || nrReferences <= 1) {
+			return child; // this effectively removes  memorynode
 		}
 
 		return this;

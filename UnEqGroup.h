@@ -27,18 +27,36 @@ namespace orchestracpp
 			double totalNrIter = 0; // total number of iterations, including mineral iterations, new tries etc.
 			double maxIter = 300;
 			std::vector<UnEq*> activeUneqs;
-			std::vector<std::vector<double>> jacobian;
+			//std::vector<std::vector<double>> jacobian2;
+
+			//int jacdim = 0;
+			double* jacobian5 = nullptr;
+			int olddim = 0;
+			double* vv;
+			int* indx;
+
+			bool firstTimeCalled = true;
+
+			bool jacprinted = false;
+
 			int nrActiveUneqs = 0;
 			VarGroup *variables = nullptr;
 
-			bool monitor = false; //switch on iteration monitoring
-			FileWriter *iterationReport = nullptr;
 			//double originalMaxIter = 0;
 			Var *minTol = nullptr;
-			double minTolOrgValue = 0;
+			//double minTolOrgValue = 0;
 			Var *tolerance = nullptr;
 
+
+			bool monitor = false; //switch on iteration monitoring
+			FileWriter* iterationReport = nullptr;
+			FileWriter* iterationReport2 = nullptr;
+
 			bool firstIteration2 = false; // if we set this at false, no iteration report is written 
+			int iterationmonitorlines = 20;
+
+
+
 
 			int nrReportLines2 = 0;
 
@@ -47,6 +65,7 @@ namespace orchestracpp
 				if (iterationReport != nullptr) {
 					delete iterationReport;
 				}
+				delete []jacobian5;
 			}
 
 			UnEqGroup(VarGroup *variables);
@@ -100,7 +119,7 @@ namespace orchestracpp
 			double howConvergent_field = 0;
 
 		private:
-			int iterateLevel0(Writer *iterationReportWriter, StopFlag *flag);
+			int iterateLevel0(StopFlag *flag);
 
 			/**
 			 * This method is called when the iteration has failed, and was restarted to
@@ -133,6 +152,8 @@ namespace orchestracpp
 		public:
 			virtual void calculateJacobian() /*throw(OrchestraException)*/;
 
+			void printJacobian();
+
 			double commonfactor = 0;
 
 			/**
@@ -154,7 +175,8 @@ namespace orchestracpp
 			/**
 			 * combined version of two routines from numerical recipes
 			 */
-			virtual void ludcmp_plus_lubksb(std::vector<std::vector<double>> &jac2, int const dim);
+			//virtual void ludcmp_plus_lubksb(std::vector<std::vector<double>>& jac2, int const dim);
+			virtual void ludcmp_plus_lubksb_new(double* jac2, int const dim);
 		};
 
 	}
