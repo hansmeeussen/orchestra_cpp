@@ -24,7 +24,7 @@ namespace orchestracpp
 	 * Checked Dec 2018
 	 * @author Hans Meeussen
 	 */
-	class VarGroup
+	class VarGroup final
 	{
 
 
@@ -39,7 +39,7 @@ namespace orchestracpp
 		std::vector<Var*> globalVariables;   // Variables that the calculator would like to see stored globally in nodes
 		std::unordered_map <std::string, std::string> synonyms;
 
-		virtual ~VarGroup()
+		~VarGroup()
 		{
 			//Todo implement to delete variables;
 			//delete globalVariables;
@@ -47,39 +47,39 @@ namespace orchestracpp
 
 		VarGroup() {}
 
-		virtual Var* readOne(OrchestraReader* in)/* throw(ReadException, IOException)*/;
+		Var* readOne(OrchestraReader* in)/* throw(ReadException, IOException)*/;
 
-		virtual Var* addVariable(std::string name, double value)/* throw(ReadException, IOException)*/;
+		Var* addVariable(std::string name, double value)/* throw(ReadException, IOException)*/;
 
-		virtual void createSynonym(OrchestraReader *in) /*throw(ReadException, IOException)*/;
+		void createSynonym(OrchestraReader *in) /*throw(ReadException, IOException)*/;
 
 		// Get a variable by its name or synonym.
-		virtual Var *get(const std::string &name);
+		Var *get(const std::string &name);
 
 		// This list includes synonyms
 		// we use a Vector because this collection is used in user interface swing objects
-		virtual std::vector<std::string>* getVariableNames();
+		std::vector<std::string>* getVariableNames();
 
-		virtual void optimizeExpressions(Parser* parser);
+		void optimizeExpressions(Parser* parser);
 
-		virtual void setDependentMemoryNodes();
+		void setDependentMemoryNodes();
 
 		//virtual void initializeParentsArrays();
 
-		virtual int getNrVariables();
+		int getNrVariables();
 
-		virtual void addToGlobalVariables(Var *var);
+		void addToGlobalVariables(Var *var);
 
-		virtual void addToGlobalVariables(const std::string &varname);
+		void addToGlobalVariables(const std::string &varname);
 
-		virtual std::vector<Var*>* getGlobalVariables();
+		std::vector<Var*>* getGlobalVariables();
 
-		virtual std::unordered_map <std::string, std::string>* getSynonyms();
+		std::unordered_map <std::string, std::string>* getSynonyms();
 
 //**  only used for testing
-		virtual std::string getVariableNamesLine();
+		std::string getVariableNamesLine();
 
-		virtual std::string getVariableValuesLine();
+		std::string getVariableValuesLine();
 
 
 

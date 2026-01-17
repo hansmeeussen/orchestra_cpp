@@ -187,7 +187,7 @@ namespace orchestracpp
 
 	public:
 	
-		virtual ~AbsNode()
+		~AbsNode()
 		{
 		}
 
@@ -216,7 +216,7 @@ namespace orchestracpp
 		ExpressionNode *child;
 
 	public:
-		virtual ~UMinNode()
+	    ~UMinNode()
 		{
 		}
 
@@ -243,7 +243,7 @@ namespace orchestracpp
 		ExpressionNode *right;
 
 	public:
-		virtual ~PlusNode()
+		~PlusNode()
 		{
 		}
 
@@ -270,7 +270,7 @@ namespace orchestracpp
 		ExpressionNode *right;
 
 	public:
-		virtual ~MinusNode()
+		~MinusNode()
 		{
 		}
 
@@ -297,7 +297,7 @@ namespace orchestracpp
 		ExpressionNode *right;
 
 	public:
-		virtual ~TimesNode()
+		~TimesNode()
 		{
 		}
 
@@ -324,7 +324,7 @@ namespace orchestracpp
 		ExpressionNode *right;
 
 	public:
-		virtual ~DivideNode()
+		~DivideNode()
 		{
 		}
 
@@ -351,7 +351,7 @@ namespace orchestracpp
 		ExpressionNode *right;
 
 	public:
-		virtual ~MaxNode()
+		~MaxNode()
 		{
 		}
 
@@ -380,7 +380,7 @@ namespace orchestracpp
 		std::unordered_set<MemoryNode*> dependentChildren = std::unordered_set<MemoryNode*>();
 
 	public:
-		virtual ~MinimumNode()
+		~MinimumNode()
 		{
 		}
 
@@ -408,7 +408,7 @@ namespace orchestracpp
 		ExpressionNode *right;
 
 	public:
-		virtual ~PowerNode()
+		~PowerNode()
 		{
 		}
 
@@ -434,7 +434,7 @@ namespace orchestracpp
 		ExpressionNode *right;
 
 	public:
-		virtual ~Power10Node()
+		~Power10Node()
 		{
 		}
 
@@ -469,7 +469,7 @@ namespace orchestracpp
 		std::unordered_set<MemoryNode*> dependentChildren;
 
 	public:
-		virtual ~IfNode()
+		~IfNode()
 		{
 //			delete condition;
 		}
@@ -733,7 +733,7 @@ namespace orchestracpp
 		BExpressionNode *child;
 
 	public:
-		virtual ~Not(){}
+		~Not(){}
 
 		Not(BExpressionNode *child);
 
@@ -744,7 +744,7 @@ namespace orchestracpp
 	{
 
 	public:
-		virtual ~LTNode() {}
+		~LTNode() {}
 
 		LTNode(ExpressionNode *left, ExpressionNode *right);
 
@@ -755,7 +755,7 @@ namespace orchestracpp
 	{
 
 	public:
-		virtual ~GTNode() {}
+		~GTNode() {}
 
 		GTNode(ExpressionNode *left, ExpressionNode *right);
 
@@ -771,7 +771,7 @@ namespace orchestracpp
 	{
 
 	public:
-		virtual ~LENode() {}
+		~LENode() {}
 
 		LENode(ExpressionNode *left, ExpressionNode *right);
 
@@ -782,7 +782,7 @@ namespace orchestracpp
 	{
 
 	public:
-		virtual ~GENode() {}
+		~GENode() {}
 
 
 		GENode(ExpressionNode *left, ExpressionNode *right);

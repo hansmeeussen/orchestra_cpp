@@ -18,7 +18,7 @@ namespace orchestracpp
 	 * 1) strings separated by comma's and started and terminated by brackets 
 	 * 2) strings separated by spaces tabs and list terminated by eol
 	 */
-	class ParameterList
+	class ParameterList final
 	{
 
 	private:
@@ -43,19 +43,19 @@ namespace orchestracpp
 		ParameterList(OrchestraReader* in, Expander * expander);
 
 
-		virtual std::string toString();
+		std::string toString();
 
-		virtual int size();
+		int size();
 
-		virtual std::string get(int i);
+		std::string get(int i);
 
-		virtual void set(int i, const std::string &value);
+		void set(int i, const std::string &value);
 
-		virtual double getDouble(int i);
+		double getDouble(int i);
 
-		virtual int index(const std::string &s);
+		int index(const std::string &s);
 
-		virtual bool contains(const std::string &n);
+		bool contains(const std::string &n);
 	};
 
 }

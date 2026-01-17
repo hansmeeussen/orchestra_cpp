@@ -17,7 +17,7 @@ namespace orchestracpp
 	 *
 	 * @author jmeeussen
 	 */
-	class MemoryNode : public ExpressionNode
+	class MemoryNode final: public ExpressionNode
 	{ //-----------------------------------------
 
 	public:
@@ -29,7 +29,7 @@ namespace orchestracpp
 		ExpressionNode *child = nullptr;
 		int nrReferences = 0;
 
-		virtual ~MemoryNode()
+		~MemoryNode()
 		{
 		//	delete child;
 		}

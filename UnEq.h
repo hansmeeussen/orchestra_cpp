@@ -34,7 +34,7 @@ namespace orchestracpp
 		 * 
 		 * March 2018 removed UnEq class and renamed uneq2 to uneq
 		 */
-		class UnEq
+		class UnEq final
 		{
 
 		public:
@@ -91,9 +91,9 @@ namespace orchestracpp
 		     * calculate delta (change in unknown) unknown that is used in numerical
 		     * determination of derivatives
 		     */
-			virtual void determineDeltaUnknown();
+			void determineDeltaUnknown();
 
-			virtual void dddetermineDeltaUnknown();
+			void dddetermineDeltaUnknown();
 
 
 
@@ -109,9 +109,9 @@ namespace orchestracpp
 		     * can factor be negative?
 		     * if residual is not a number?
 		     */
-			virtual double checkUnknownStep();
+			double checkUnknownStep();
 
-			virtual void updateUnknown(double factor);
+			void updateUnknown(double factor);
 
 			/*
 			 * <1 is convergent
@@ -125,28 +125,25 @@ namespace orchestracpp
 		//        }
 		//    }
 
-			virtual double howConvergent()/* throw(OrchestraException)*/;
+			double howConvergent()/* throw(OrchestraException)*/;
 
 
-			virtual bool isConvergent() /*throw(OrchestraException)*/;
+			bool isConvergent() /*throw(OrchestraException)*/;
 
-			virtual double offsetUnknown();
+			double offsetUnknown();
 
-
-
-			virtual void resetUnknown(double tmp);
-
+			void resetUnknown(double tmp);
 
 
 			/**
 			 * This method returns the function value or residual that has to become
 			 * zero
 			 */
-			virtual double residual()/* throw(OrchestraException)*/;
+			double residual()/* throw(OrchestraException)*/;
 
-			virtual void calculateCentralResidual() /*throw(OrchestraException)*/;
+			void calculateCentralResidual() /*throw(OrchestraException)*/;
 
-			virtual void calculateJResidual() /*throw(OrchestraException)*/;
+			void calculateJResidual() /*throw(OrchestraException)*/;
 		};
 
 }

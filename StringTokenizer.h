@@ -9,7 +9,7 @@
  * Hans Meeussen October 2019
 *---------------------------------------------------------------------------------------- 
 */
-class StringTokenizer {
+class StringTokenizer final {
     
 private:
     StringTokenizer();

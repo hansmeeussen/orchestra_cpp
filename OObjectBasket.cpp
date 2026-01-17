@@ -6,6 +6,18 @@
 namespace orchestracpp
 {
 
+	OObjectBasket::~OObjectBasket()
+	{
+		for (auto pair : newObjects) {
+			delete pair.second;
+		}
+
+		//for (std::unordered_map<std::string, OObject*>::iterator itr = newObjects.begin(); itr != newObjects.end(); itr++)
+		//{
+		//	delete (itr->second);
+		//}
+	}
+
 	OObject *OObjectBasket::addObject(OrchestraReader *in)// throw(IOException)
 	{
 //		std::cout << "adding and constructing object:" << std::endl;

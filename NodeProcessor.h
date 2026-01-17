@@ -19,7 +19,7 @@ using namespace orchestracpp;
 namespace orchestracpp
 {
 
-	class NodeProcessor {
+	class NodeProcessor final {
 	
 
 	private:

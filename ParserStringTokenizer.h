@@ -14,7 +14,7 @@ namespace orchestracpp
 	 * This string tokenizer splits up a string in tokens.
 	 * It does not remove the delimiter characters
 	 */
-	class ParserStringTokenizer
+	class ParserStringTokenizer final
 	{
 	private:
 		std::string expression; // the expression string
@@ -25,38 +25,38 @@ namespace orchestracpp
         
         ParserStringTokenizer();
         
-		virtual ~ParserStringTokenizer()
+		~ParserStringTokenizer()
 		{
 			delete tokenizer;
 		}
 
 		ParserStringTokenizer(const std::string &expression);
 
-		virtual std::string getCurrentToken();
+	    std::string getCurrentToken();
 
-		virtual std::string nextToken() /*throw(ParserException)*/;
+		std::string nextToken() /*throw(ParserException)*/;
 
-		virtual void consume();
+		void consume();
 
-		virtual bool match(const std::string &s)/* throw(ParserException)*/;
+		bool match(const std::string &s)/* throw(ParserException)*/;
 
 	private:
 		void matchAndConsume(const std::string &s, const std::string &message)/* throw(ParserException)*/;
 
 	public:
-		virtual void matchAndConsume(const std::string &s)/* throw(ParserException)*/;
+		void matchAndConsume(const std::string &s)/* throw(ParserException)*/;
 
-		virtual bool equals(const std::string &s)/* throw(ParserException)*/;
+		bool equals(const std::string &s)/* throw(ParserException)*/;
 
-		virtual bool hasMoreTokens();
+		bool hasMoreTokens();
 
-		virtual bool isNumber();
+		bool isNumber();
 
-		virtual bool isaNumber(const std::string);
+		bool isaNumber(const std::string);
 
-        virtual Var *isVariable(VarGroup *variables);
+        Var *isVariable(VarGroup *variables);
 
-		virtual std::string getExpression();
+		std::string getExpression();
 		
 
 	};

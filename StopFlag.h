@@ -8,7 +8,7 @@
 namespace orchestracpp
 {
 
-	class StopFlag
+	class StopFlag final
 	{
 
 		// in Java its appears significantly faster to use a volatile variable for 
@@ -29,18 +29,18 @@ namespace orchestracpp
 	public:
 		StopFlag();
 
-		virtual bool isCancelled();
+		bool isCancelled();
 
-		virtual void addChild(StopFlag *child);
+		void addChild(StopFlag *child);
 
-		virtual void removeChild(StopFlag *child);
+		void removeChild(StopFlag *child);
 
-		virtual void reset();
+		void reset();
 
 		/**
 		 * stops all children, but not the parent!
 		 */
-		virtual void pleaseStop(const std::string &calledFrom);
+		void pleaseStop(const std::string &calledFrom);
 
 	};
 

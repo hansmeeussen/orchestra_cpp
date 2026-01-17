@@ -22,7 +22,7 @@ namespace orchestracpp
 	 * Hans Meeussen
 	 * July 2002
 	 */
-	class ExpressionGraph
+	class ExpressionGraph final
 	{
     public:
 	   //VarGroup *variables;
@@ -39,25 +39,25 @@ namespace orchestracpp
 
 	   Parser *parser = nullptr;
 
-	   virtual ~ExpressionGraph()
+	   ~ExpressionGraph()
 	   {
 		   delete parser;
 	   }
 
 	   ExpressionGraph(VarGroup *variables) /*throw(IOException)*/;
 
-	   virtual void readExpression(OrchestraReader *infile) /*throw(ParserException)*/;
+	   void readExpression(OrchestraReader *infile) /*throw(ParserException)*/;
 
-	   virtual void addExpression2(char stage, const std::string &expressionInputString) /*throw(ParserException)*/;
+	   void addExpression2(char stage, const std::string &expressionInputString) /*throw(ParserException)*/;
 
-	   virtual void addExpression(char stage, ExpressionString *expression) /*throw(ParserException)*/;
+	   void addExpression(char stage, ExpressionString *expression) /*throw(ParserException)*/;
 
 	   //int nrExpressions = 0;
 
 	   /**
 	    * Add the expressions in the correct order to the expressionGraph
 	    */
-	   virtual int initialize()/* throw(ParserException)*/;
+	   int initialize()/* throw(ParserException)*/;
 
 	};
 }

@@ -7,6 +7,18 @@
 namespace orchestracpp
 {
 
+	OObject::~OObject()
+	{
+		
+		delete placeholders;
+		
+		// delete placeholderpointers
+		for (auto o : placeHolderPointer) {
+			delete o;
+		}
+		
+	}
+
 	std::string OObject::readObjectName(OrchestraReader *in)// throw(IOException)
 	{
 		// strip leading spaces and tabs
@@ -258,7 +270,7 @@ namespace orchestracpp
 
 			if (!tokenIsParameter)
 			{
-				// we create a new piece of text here, that should be deleted 
+				// we create a new piece of text here, that should be deleted upon destruction
 				// 
 				OObjectPieceOfText* Opt = new OObjectPieceOfText(token);
 				textPointers.push_back(Opt);

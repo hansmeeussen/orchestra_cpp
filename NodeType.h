@@ -24,7 +24,7 @@ namespace orchestracpp
 	 * contains the set of state variables per cell. The static variables and
 	 * methods are constant for all nodes of the system.
 	 */
-	class NodeType
+	class NodeType final
 	{
 
 
@@ -46,7 +46,7 @@ namespace orchestracpp
 
 		std::unordered_map<std::string, std::string> synonyms; // a list of synonyms
 
-		virtual ~NodeType()
+		~NodeType()
 		{
 			delete[] staticValues;
 		}

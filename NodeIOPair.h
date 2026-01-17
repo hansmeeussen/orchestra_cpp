@@ -12,21 +12,21 @@ namespace orchestracpp
 	 * a local calculator variable and back. 
 	 * @author Hans Meeussen 26/7/1999
 	 */
-	class NodeIOPair
+	class NodeIOPair final
 	{
 	public:
 		int nodeVarIndex = 0; // index to the global Node variable
 		Var *localVar = nullptr; // the local variable (calculator or input output stream)
 
-		virtual ~NodeIOPair()
+		~NodeIOPair()
 		{
 			//delete localVar;
 		}
 
 		NodeIOPair(Var *local, int global);
 
-		virtual void copyFromNode(Node *node);
+		void copyFromNode(Node *node);
 
-		virtual void copyToNode(Node *node);
+		void copyToNode(Node *node);
 	};
 }

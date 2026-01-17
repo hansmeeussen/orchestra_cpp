@@ -18,7 +18,7 @@ namespace orchestracpp
 		 * This UnEqGroup contains the uneqs (unknown-equations) and manages the
 		 * iteration process
 		 */
-		class UnEqGroup
+		class UnEqGroup final
 		{
 
 		public:
@@ -32,8 +32,8 @@ namespace orchestracpp
 			//int jacdim = 0;
 			double* jacobian5 = nullptr;
 			int olddim = 0;
-			double* vv;
-			int* indx;
+			//double* vv;
+			//int* indx;
 
 			bool firstTimeCalled = true;
 
@@ -60,7 +60,7 @@ namespace orchestracpp
 
 			int nrReportLines2 = 0;
 
-			virtual ~UnEqGroup()
+			~UnEqGroup()
 			{
 				if (iterationReport != nullptr) {
 					delete iterationReport;
@@ -75,14 +75,13 @@ namespace orchestracpp
 			 * iteration. It dimensions the jacobian arrays according to the number of
 			 * active uneqs.
 			 */
-			virtual void initialise();
+			void initialise();
 
-			virtual UnEq *doesExist(UnEq *u) /*throw(ReadException)*/;
+			UnEq *doesExist(UnEq *u) /*throw(ReadException)*/;
 
+            void read_one2(const std::string &infile) /*throw(ReadException, IOException)*/;
 
-			virtual void read_one2(const std::string &infile) /*throw(ReadException, IOException)*/;
-
-			virtual void read_one3(const std::string &infile) /*throw(ReadException, IOException)*/;
+			void read_one3(const std::string &infile) /*throw(ReadException, IOException)*/;
 
 			/**
 			 * This is the top level iteration method that is called from the calculator
@@ -92,18 +91,18 @@ namespace orchestracpp
 			 *
 			 *
 			 */
-			virtual bool iterate(StopFlag *flag);
+			bool iterate(StopFlag *flag);
 
-			virtual double getTotalNrIter();
+			double getTotalNrIter();
 
-			virtual double getNrIter();
+			double getNrIter();
 
-			virtual bool getIIApresent();
+			bool getIIApresent();
 
 			// switch on/off initially inactive uneqs
-			virtual void switchOnIIA();
+			void switchOnIIA();
 
-			virtual void switchOffIIA();
+			void switchOffIIA();
 
 			int maxMineralIterations = 100; // shall we increase this?
 
@@ -150,7 +149,7 @@ namespace orchestracpp
 			 * calculate the jacobian = delta equation / delta unknown
 			 */
 		public:
-			virtual void calculateJacobian() /*throw(OrchestraException)*/;
+			void calculateJacobian() /*throw(OrchestraException)*/;
 
 			void printJacobian();
 
@@ -161,7 +160,7 @@ namespace orchestracpp
 			 *
 			 * @throws OrchestraException
 			 */
-			virtual void adaptEstimations()/* throw(OrchestraException)*/;
+			void adaptEstimations()/* throw(OrchestraException)*/;
 
 			/**
 			 * This method first calculates the central values of the residuals for all
@@ -170,13 +169,13 @@ namespace orchestracpp
 		
 			 * @throws OrchestraException
 			 */
-			virtual double howConvergent() /*throw(OrchestraException)*/;
+			double howConvergent() /*throw(OrchestraException)*/;
 
 			/**
 			 * combined version of two routines from numerical recipes
 			 */
 			//virtual void ludcmp_plus_lubksb(std::vector<std::vector<double>>& jac2, int const dim);
-			virtual void ludcmp_plus_lubksb_new(double* jac2, int const dim);
+			void ludcmp_plus_lubksb_new(double* jac2, int const dim);
 		};
 
 	}

@@ -37,7 +37,7 @@ namespace orchestracpp
 	 * Updated to Java 7 Switch statement 6 May 2014
 	 * Introduced "static" sharedBasket 3/11/2016
 	 */
-	class Expander
+	class Expander final
 	{
 		// this objectbasket is shared by all expanders.
 		// we have to see whether this is the desired behaviour!
@@ -86,7 +86,7 @@ namespace orchestracpp
 			nowarnObjects.push_back("entity");
 		}
 
-		virtual ~Expander()
+		~Expander()
 		{
 			//delete basket; // we have to be careful with this
 		}

@@ -26,7 +26,7 @@ namespace orchestracpp
 	 * Updated structure to single map 4/11/2016
 	 *
 	 */
-	class OObjectBasket
+	class OObjectBasket final
 	{
 
 	public:
@@ -36,41 +36,47 @@ namespace orchestracpp
 		/**
 		 * read object from input reader and insert at start of list
 		 */
-		virtual ~OObjectBasket()
+		~OObjectBasket();/*
 		{
-			for (auto pair : newObjects) {
-				delete pair.second;
-    		}
-		}
+//			for (auto pair : newObjects) {
+//				delete pair->second;
+//			}
 
-		virtual OObject *addObject(OrchestraReader *in) /*throw(IOException)*/;
+			for (std::unordered_map<std::string, OObject*>::iterator itr = newObjects.begin(); itr != newObjects.end(); itr++)
+			{
+				delete (itr->second);
+			}
+		}
+		*/
+
+		OObject *addObject(OrchestraReader *in) /*throw(IOException)*/;
 
 		/**
 		 * append text to existing object
 		 */
-		virtual OObject *append(OrchestraReader *in)/* throw(IOException)*/;
+		OObject *append(OrchestraReader *in)/* throw(IOException)*/;
 
 		/**
 		 * insert text at start of bodytext
 		 */
-		virtual OObject *insert(OrchestraReader *in) /*throw(IOException)*/;
+		OObject *insert(OrchestraReader *in) /*throw(IOException)*/;
 
 		/**
 		 * Delete object with name and nr parameters read from in
 		 */
-		virtual OObject *ddelete(OrchestraReader *in) /*throw(IOException)*/;
+		OObject *ddelete(OrchestraReader *in) /*throw(IOException)*/;
 
 		/**
 		 * check if name is an existing objectname
 		 */
-		virtual bool isObjectName(const std::string &name);
+		bool isObjectName(const std::string &name);
 
 		/**
 		 * Return OObject with a given name and number of parameters
 		 */
-		virtual OObject *getObject(const std::string &name, int nrParam);
+		OObject *getObject(const std::string &name, int nrParam);
 
-		virtual OObject *getObject(OrchestraReader *in) /*throw(IOException)*/;
+		OObject *getObject(OrchestraReader *in) /*throw(IOException)*/;
 	};
 
 }

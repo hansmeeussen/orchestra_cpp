@@ -71,10 +71,10 @@ namespace orchestracpp
 			//delete existing one
 			if (jacobian5 != nullptr)delete []jacobian5;
 			jacobian5 = new double[nrActiveUneqs * nrActiveUneqs];
-			delete []vv;
-			vv = new double[nrActiveUneqs];
-			delete []indx;
-			indx = new int[nrActiveUneqs];
+		//	delete []vv;
+		//	vv = new double[nrActiveUneqs];
+		//	delete []indx;
+		// 	indx = new int[nrActiveUneqs];
 			olddim = nrActiveUneqs;
 			//std::cout << "Printing initial jacobian:" << std::endl;
 			//printJacobian();
@@ -671,8 +671,8 @@ namespace orchestracpp
 
 		void UnEqGroup::ludcmp_plus_lubksb_new(double* jac2, int const dim)
 		{
-			//double* vv = new double[dim];
-			//int* indx = new int[dim];
+			double* vv = new double[dim];
+			int* indx = new int[dim];
 
 
 			for (int i = 0; i < dim; i++)
@@ -799,8 +799,8 @@ namespace orchestracpp
 
 			}
 
-			//delete []vv;
-			//delete []indx;
+			delete []vv;
+			delete []indx;
 		}
 
 

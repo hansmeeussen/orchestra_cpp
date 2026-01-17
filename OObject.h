@@ -11,7 +11,7 @@
 namespace orchestracpp
 {
 
-	class OObject
+	class OObject final
 	{
 
 	private:
@@ -26,23 +26,8 @@ namespace orchestracpp
 
 		// Static methods to read members from reader
 	public:
-		virtual ~OObject()
-		{
-			delete placeholders;
 
-		   //delete textpointers
-			for (auto o : textPointers) {
-				delete o;
-			}
-
-			// delete placeholderpointers
-			for (auto o : placeHolderPointer) {
-				delete o;
-			}
-
-
-
-		}
+		~OObject();
 
 		static std::string readObjectName(OrchestraReader *in) /*throw(IOException)*/;
 
@@ -66,32 +51,32 @@ namespace orchestracpp
 
 		OObject(const std::string &name, ParameterList *placeholders, const std::string &documentation, const std::string &bodytext);
 
-		virtual std::string getName();
+		std::string getName();
 
-		virtual std::string getKey();
+		std::string getKey();
 
-		virtual std::string getIdentifier();
+		std::string getIdentifier();
 
-		virtual std::string getPlaceholders();
+		std::string getPlaceholders();
 
-		virtual std::string getDocumentation();
+		std::string getDocumentation();
 
-		virtual std::string getBodytext();
+		std::string getBodytext();
 
-		virtual int getNrParam();
+		int getNrParam();
 
-		virtual bool identifierOK(const std::string &name, int nrp);
+		bool identifierOK(const std::string &name, int nrp);
 
-		virtual void append(OrchestraReader *in) /*throw(IOException)*/;
+		void append(OrchestraReader *in) /*throw(IOException)*/;
 
-		virtual void insert(OrchestraReader *in) /*throw(IOException)*/;
+		void insert(OrchestraReader *in) /*throw(IOException)*/;
 
 		/**
 		 * Initialisation of textpointers and placeholderpointers, occurs only once
 		 */
-		virtual void initialiseTextPointers();
+		void initialiseTextPointers();
 
-		virtual std::string getSubstitutedBodytext(ParameterList *parameters);
+		std::string getSubstitutedBodytext(ParameterList *parameters);
 
 	};
 

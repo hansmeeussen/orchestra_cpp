@@ -5,15 +5,14 @@
 namespace orchestracpp
 {
 
-	class OObjectPieceOfText
+	class OObjectPieceOfText final
 	{
 	public:
 		std::string text;
         
 		OObjectPieceOfText(const std::string &text);
-      //  virtual ~OObjectPieceOfText(){
-	//		delete &text;
-	//	};
+        ~OObjectPieceOfText(){
+		};
 
     };
 }

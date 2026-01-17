@@ -42,7 +42,7 @@ namespace orchestracpp
 		 */
 
 	public:
-		virtual ~NodeIOObject()
+		~NodeIOObject()
 		{
 			for (auto pair : toLocalList) {
 				delete pair;
