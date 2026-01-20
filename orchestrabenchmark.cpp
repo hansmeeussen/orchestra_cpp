@@ -1,3 +1,4 @@
+/* We comment this file out, so it does not mess up a standard compilation of all files in this folder with a single main program
 //--------------------------------------------------------------------------------------------------------------------------
 // This file is part of the C++ ORCHESTRA chemical solver code
 //
@@ -415,3 +416,4 @@ int main()
 } 
 
 
+*/
