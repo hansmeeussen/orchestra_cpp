@@ -42,7 +42,7 @@ namespace orchestracpp
 
 			if (child->constant())
 			{
-				child = NumberNode::createNumberNode(evaluate(), parser);
+				child = NumberNode::createNumberNode(child->evaluate(), parser);
 			}
 		}
 

@@ -556,6 +556,134 @@ namespace orchestracpp
 		return this;
 	}
 
+	std::vector<PlusNode*>* PlusNode::findMultiPlusNode(std::vector<PlusNode*>* plusNodes) 
+	{
+		std::vector<PlusNode*>* leftPlusNodes  = nullptr;
+		std::vector<PlusNode*>* rightPlusNodes = nullptr;
+		plusNodes->push_back(this);
+
+		//if left instanceof PlusNode) {
+		if (typeid(*left) == typeid(*this)) {
+			leftPlusNodes = new std::vector<PlusNode*>;
+			((PlusNode*)left)->findMultiPlusNode(leftPlusNodes);
+		}
+
+		if (typeid(*right) == typeid(*this)) {
+			rightPlusNodes = new std::vector<PlusNode*>;
+			((PlusNode*)right)->findMultiPlusNode(rightPlusNodes);
+		}
+
+		// both null, this is the top node
+        // this one has to be evaluated last
+		if (leftPlusNodes == nullptr && rightPlusNodes == nullptr) {
+			return plusNodes;
+		}
+
+		// both are NOT null
+        // check which one has deepest list
+        // if equal just select one
+		if ((leftPlusNodes != nullptr) && (rightPlusNodes != nullptr)) {
+			if (leftPlusNodes->size() > rightPlusNodes->size()) {
+				for (int n = 0; n < leftPlusNodes->size(); n++) {
+					plusNodes->push_back(leftPlusNodes->at(n));
+				}
+			}
+			else {
+				for (int n = 0; n < rightPlusNodes->size(); n++) {
+					plusNodes->push_back(rightPlusNodes->at(n));
+				}
+			}
+			return plusNodes;
+		}
+
+		// one of the two is null
+        // return the not null one
+		if (leftPlusNodes != nullptr) {
+//			plusNodes.addAll(leftPlusNodes);
+			for (int n = 0; n < leftPlusNodes->size(); n++) {
+				plusNodes->push_back(leftPlusNodes->at(n));
+			}
+
+		}
+		else {
+//			plusNodes.addAll(rightPlusNodes);
+			for (int n = 0; n < rightPlusNodes->size(); n++) {
+				plusNodes->push_back(rightPlusNodes->at(n));
+			}
+
+		}
+
+		return plusNodes;
+	}
+
+
+	MultiPlusNode::MultiPlusNode(std::vector <PlusNode*>* children, PlusNode* originalPlusNode) {
+		this->originalPlusNode = originalPlusNode;
+
+		children2 = new std::vector<ExpressionNode*>;
+
+		// we now have to replace the plusnodes with pointers to their expression nodes
+		// start with final one   
+
+		PlusNode* pnode = children->at(children->size() - 1);
+		// the final one has no plus children, so add both children to children2
+		children2->push_back(pnode->left);
+		children2->push_back(pnode->right);
+
+		// now we process rest of plus nodes
+		for (int n = children->size() - 2; n >= 0; n--) {
+
+			// so we add to the children2 the reference to the non plusnode child
+			PlusNode* enode = children->at(n);
+			if (enode->left == children->at(n + 1)) {
+				children2->push_back(enode->right);
+			}
+			else {
+				children2->push_back(enode->left);
+			}
+		}
+
+		// now we can create a simple array with expression nodes
+
+	//	ExpressionNode* c = new ExpressionNode[children2->size()];
+
+
+	}
+
+	double MultiPlusNode::evaluate() {
+	
+		double value = 0;
+
+		int end = children2->size();
+		for (int n = 0; n < end; n++) {
+			value = value + children2->at(n)->evaluate();
+		}
+
+		/*
+		// check correctness
+        if (originalPlusNode->evaluate() != value) {
+			std::cout << "not ok!" << std::endl;
+
+        } else {
+			//std::cout << "ok!" << std::endl;
+        }
+		*/
+		return value;
+	}
+
+	void MultiPlusNode::setDependentMemoryNode(MemoryNode* parent) {
+	}
+
+	bool MultiPlusNode::constant() {
+		return false;
+	}
+
+	ExpressionNode* MultiPlusNode::optimize(Parser* parser) {
+		return this;
+	}
+
+
+
 	MinusNode::MinusNode(ExpressionNode *left, ExpressionNode *right)
 	{
 		this->left = left;

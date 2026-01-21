@@ -73,6 +73,39 @@ namespace orchestracpp
 		}
 
 		setDependentMemoryNodes();
+
+		// We now have all expressions optimized and dpendent memory nodes set
+		// To optimize specifically this C++ version we replace a series of connected
+		// PlusNodes by a single MultiPlusNode. This reduces the number of virtual method pointers that
+		// have to be looked up in memory by ca 50%, and  reduces overall runtime by ca 25%
+        // In java this optimization is not faster, most likely because the Java virtual machine 
+		// ptimizes this automatically at run time 
+		//*
+        for (auto v : variables){
+
+			if (v->memory != nullptr) {
+
+				if ((typeid(*v->memory->child) == typeid(PlusNode))) {
+					std::vector<PlusNode*>* plusNodes = new std::vector<PlusNode*>;
+					((PlusNode*)v->memory->child)->findMultiPlusNode(plusNodes);
+				
+
+				    if (plusNodes->size() >= 2) {
+
+						// now we replace the original PlusNode pointer of this variable to the new MultiPlusNode 
+					    v->memory->child = new MultiPlusNode(plusNodes, (PlusNode*)v->memory->child);
+				    }
+					// and we can delete the plusNodes as these are only used during intialisation
+					delete(plusNodes);
+				}
+				else {
+					
+
+				}
+	        }
+        }
+		//*/
+
 	}
 
 	void VarGroup::setDependentMemoryNodes() {

@@ -5,8 +5,10 @@
 #include <map>
 #include <unordered_set>
 #include <algorithm>
+#include <vector>
 #include <iostream>
 #include <cmath>
+#include <typeinfo>
 #include "OrchestraException.h"
 #include "VarGroup.h"
 
@@ -238,7 +240,7 @@ namespace orchestracpp
 	class PlusNode final : public ExpressionNode
 	{ //------------------------------------------
 
-	private:
+	public:
 		ExpressionNode *left;
 		ExpressionNode *right;
 
@@ -257,10 +259,50 @@ namespace orchestracpp
 
 		ExpressionNode *optimize(Parser* parser) override;
 
+
+		std::vector<PlusNode*>* findMultiPlusNode(std::vector<PlusNode*>*);
+
 	//    public String toString() {
 	//        return ("(" + left.toString() + "+" + right.toString() + ")");
 	//    }
 	}; //-----------------------------------------------------------------------------------------
+
+
+	class MultiPlusNode final : public ExpressionNode
+	{ //------------------------------------------
+
+	private:
+		//ExpressionNode* left;
+		//ExpressionNode* right;
+		std::vector<ExpressionNode*>* children2;
+		PlusNode* originalPlusNode;
+
+	public:
+		~MultiPlusNode()
+		{
+		}
+
+		MultiPlusNode(std::vector<PlusNode*>* children, PlusNode* originalPlusNode);
+
+		double evaluate() override;
+
+		void setDependentMemoryNode(MemoryNode* parent) override;
+
+		bool constant() override;
+
+		ExpressionNode* optimize(Parser* parser) override;
+
+
+		//    public String toString() {
+		//        return ("(" + left.toString() + "+" + right.toString() + ")");
+		//    }
+	}; //-----------------------------------------------------------------------------------------
+
+
+
+
+
+
 
 	class MinusNode final : public ExpressionNode
 	{ //-------------------------------------------
