@@ -617,46 +617,63 @@ namespace orchestracpp
 	}
 
 
-	MultiPlusNode::MultiPlusNode(std::vector <PlusNode*>* children, PlusNode* originalPlusNode) {
+	MultiPlusNode::MultiPlusNode(std::vector <PlusNode*>* plusNodes, PlusNode* originalPlusNode) {
 		this->originalPlusNode = originalPlusNode;
 
-		children2 = new std::vector<ExpressionNode*>;
+		nrChildren = plusNodes->size() + 1;
+		childRefs  = new ExpressionNode * [nrChildren];
 
 		// we now have to replace the plusnodes with pointers to their expression nodes
 		// start with final one   
 
-		PlusNode* pnode = children->at(children->size() - 1);
+		PlusNode* finalPlusnode = plusNodes->at(plusNodes->size() - 1);
 		// the final one has no plus children, so add both children to children2
-		children2->push_back(pnode->left);
-		children2->push_back(pnode->right);
+		childRefs[nrChildren - 1] = finalPlusnode->left;
+		childRefs[nrChildren - 2] = finalPlusnode->right;
 
 		// now we process rest of plus nodes
-		for (int n = children->size() - 2; n >= 0; n--) {
+		for (int n = nrChildren - 3; n >= 0; n--) {
 
 			// so we add to the children2 the reference to the non plusnode child
-			PlusNode* enode = children->at(n);
-			if (enode->left == children->at(n + 1)) {
-				children2->push_back(enode->right);
+			PlusNode* enode = plusNodes->at(n);
+			if (enode->left == plusNodes->at(n + 1)) {
+				childRefs[n] = enode->right;
 			}
 			else {
-				children2->push_back(enode->left);
+				childRefs[n] = enode->left;
 			}
 		}
 
-		// now we can create a simple array with expression nodes
+		factors = new double[nrChildren];
+		for (int n = 0; n < nrChildren; n++) {
+			factors[n] = 1.0;
+		}
 
-	//	ExpressionNode* c = new ExpressionNode[children2->size()];
-
-
+		// look for (times * constant) child references and put the constant factor in factors and
+		// replace the reference to the child directly with the child of the times node
+		// This saves two reference look-ups and is a frequently occurring combination.
+		// The makes the C++ version significantly faster (and the Java version somewhat) 
+		for (int n = nrChildren - 1; n >= 0; n--) {
+			if (typeid(*childRefs[n]) == typeid(TimesNode)) {
+				TimesNode* tmpTimesNode = ((TimesNode*)childRefs[n]);
+				if (tmpTimesNode->left->constant()) {
+					factors[n] = tmpTimesNode->left->evaluate();
+					childRefs[n] = tmpTimesNode->right;
+				}
+				else if (tmpTimesNode->right->constant()) {
+					factors[n] = tmpTimesNode->right->evaluate();
+					childRefs[n] = tmpTimesNode->left;
+				}
+			}
+		}
 	}
 
 	double MultiPlusNode::evaluate() {
 	
-		double value = 0;
-
-		int end = children2->size();
-		for (int n = 0; n < end; n++) {
-			value = value + children2->at(n)->evaluate();
+		double value = 0.0;
+	
+		for (int n = nrChildren - 1; n >= 0; n--) {
+			value = value + (factors[n] * childRefs[n]->evaluate());
 		}
 
 		/*
@@ -667,7 +684,7 @@ namespace orchestracpp
         } else {
 			//std::cout << "ok!" << std::endl;
         }
-		*/
+		//*/
 		return value;
 	}
 

@@ -272,10 +272,10 @@ namespace orchestracpp
 	{ //------------------------------------------
 
 	private:
-		//ExpressionNode* left;
-		//ExpressionNode* right;
-		std::vector<ExpressionNode*>* children2;
+		int nrChildren = 0;
+		ExpressionNode** childRefs;
 		PlusNode* originalPlusNode;
+		double* factors;
 
 	public:
 		~MultiPlusNode()
@@ -334,7 +334,7 @@ namespace orchestracpp
 	class TimesNode final : public ExpressionNode
 	{ //-----------------------------------------
 
-	private:
+	public:
 		ExpressionNode *left;
 		ExpressionNode *right;
 

@@ -89,14 +89,13 @@ namespace orchestracpp
 					std::vector<PlusNode*>* plusNodes = new std::vector<PlusNode*>;
 					((PlusNode*)v->memory->child)->findMultiPlusNode(plusNodes);
 				
-
 				    if (plusNodes->size() >= 2) {
 
 						// now we replace the original PlusNode pointer of this variable to the new MultiPlusNode 
 					    v->memory->child = new MultiPlusNode(plusNodes, (PlusNode*)v->memory->child);
 				    }
 					// and we can delete the plusNodes as these are only used during intialisation
-					delete(plusNodes);
+					// delete(plusNodes);
 				}
 				else {
 					
