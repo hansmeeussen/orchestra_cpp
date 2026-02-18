@@ -30,7 +30,7 @@ namespace orchestracpp
 			//std::vector<std::vector<double>> jacobian2;
 
 			//int jacdim = 0;
-			double* jacobian5 = nullptr;
+			double* jacobian = nullptr;
 			int olddim = 0;
 			//double* vv;
 			//int* indx;
@@ -65,7 +65,7 @@ namespace orchestracpp
 				if (iterationReport != nullptr) {
 					delete iterationReport;
 				}
-				delete []jacobian5;
+				delete []jacobian;
 			}
 
 			UnEqGroup(VarGroup *variables);

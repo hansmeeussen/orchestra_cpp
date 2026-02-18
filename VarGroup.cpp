@@ -74,12 +74,12 @@ namespace orchestracpp
 
 		setDependentMemoryNodes();
 
-		// We now have all expressions optimized and dpendent memory nodes set
+		// We now have all expressions optimized and dependent memory nodes set
 		// To optimize specifically this C++ version we replace a series of connected
 		// PlusNodes by a single MultiPlusNode. This reduces the number of virtual method pointers that
-		// have to be looked up in memory by ca 50%, and  reduces overall runtime by ca 25%
-        // In java this optimization is not faster, most likely because the Java virtual machine 
-		// ptimizes this automatically at run time 
+		// have to be looked up in memory by ca 50%, and  reduces overall runtime by ca 33%
+        // In java this optimization is not significantly faster, most likely because the Java virtual machine 
+		// optimizes this automatically at run time 
 		//*
         for (auto v : variables){
 

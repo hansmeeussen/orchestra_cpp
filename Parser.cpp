@@ -649,6 +649,8 @@ namespace orchestracpp
 			factors[n] = 1.0;
 		}
 
+		nrTimesConstant = 0;
+
 		// look for (times * constant) child references and put the constant factor in factors and
 		// replace the reference to the child directly with the child of the times node
 		// This saves two reference look-ups and is a frequently occurring combination.
@@ -657,10 +659,12 @@ namespace orchestracpp
 			if (typeid(*childRefs[n]) == typeid(TimesNode)) {
 				TimesNode* tmpTimesNode = ((TimesNode*)childRefs[n]);
 				if (tmpTimesNode->left->constant()) {
+					nrTimesConstant++;
 					factors[n] = tmpTimesNode->left->evaluate();
 					childRefs[n] = tmpTimesNode->right;
 				}
 				else if (tmpTimesNode->right->constant()) {
+					nrTimesConstant++;
 					factors[n] = tmpTimesNode->right->evaluate();
 					childRefs[n] = tmpTimesNode->left;
 				}
@@ -672,8 +676,16 @@ namespace orchestracpp
 	
 		double value = 0.0;
 	
-		for (int n = nrChildren - 1; n >= 0; n--) {
-			value = value + (factors[n] * childRefs[n]->evaluate());
+		if (nrTimesConstant > 0) {
+			for (int n = nrChildren - 1; n >= 0; n--) {
+				value = value + (factors[n] * childRefs[n]->evaluate());
+			}
+		}
+		else {
+			// if there are no times nodes we skip the multiplication by factor
+			for (int n = nrChildren - 1; n >= 0; n--) {
+				value = value + childRefs[n]->evaluate();
+			}
 		}
 
 		/*

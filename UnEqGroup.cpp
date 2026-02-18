@@ -36,7 +36,7 @@ namespace orchestracpp
 		// Create the list of active uneqs
 
 		// first we make initially all mineral uneqs inactive if their ini value <0
-		if (jacobian5 == nullptr) {
+		if (jacobian == nullptr) {
 			for (auto uneq : uneqs){
 				if (uneq->isType3){
 					uneq->active = uneq->unknown->getIniValue() > 0;
@@ -55,45 +55,21 @@ namespace orchestracpp
 			}
 		}
 
-		if (jacobian5 == nullptr) {
+		if (jacobian == nullptr) {
 			std::cout<<"Create initial Jacobian size: "<<nrActiveUneqs<<std::endl;
 		}
 
-		//std::cout << "The active uneqs:" << std::endl;
-		//for (int n = 0; n < nrActiveUneqs; n++) {
-		//	std::cout << activeUneqs[n]->unknown->name << std::endl;
-		//}
 
 		// dimension the jacobian matrix according to the number of active uneqs
 		// only create a new one if nr active uneqs has changed
-		if (nrActiveUneqs > olddim || jacobian5 == nullptr) {
+		if (nrActiveUneqs > olddim || jacobian == nullptr) {
 			std::cout << "Create Jacobian size: " << nrActiveUneqs << std::endl;
-			//delete existing one
-			if (jacobian5 != nullptr)delete []jacobian5;
-			jacobian5 = new double[nrActiveUneqs * nrActiveUneqs];
-		//	delete []vv;
-		//	vv = new double[nrActiveUneqs];
-		//	delete []indx;
-		// 	indx = new int[nrActiveUneqs];
+
+			//delete existing one, do we need to check for nullptr?
+			if (jacobian != nullptr)delete []jacobian;
+			jacobian = new double[nrActiveUneqs * nrActiveUneqs];
 			olddim = nrActiveUneqs;
-			//std::cout << "Printing initial jacobian:" << std::endl;
-			//printJacobian();
-			//std::cout << "Ready:" << std::endl;
 		}
-
-
-
-		// dimension the jacobian matrix according to the number of active uneqs
-		// only create a new one if nr active uneqs has changed
-//		if (nrActiveUneqs != olddim || jacobian.empty())
-//		{
-//			jacobian = *new std::vector<std::vector<double>>(nrActiveUneqs + 1);
-//
-//			for (int vector1 = 0; vector1 < (nrActiveUneqs + 1); vector1++)
-//			{
-//				jacobian[vector1] = std::vector<double>(nrActiveUneqs + 1);
-//			}
-//		}
 
 		if (minTol == nullptr) {
 			minTol = variables->get("minTol");
@@ -150,23 +126,6 @@ namespace orchestracpp
 
 	bool UnEqGroup::iterate(StopFlag *flag)
 	{
-/*
-		if (firstTimeCalled) {
-			firstTimeCalled = false;
-
-			jacobian2 = *new std::vector<std::vector<double>>(uneqs.size() + 1);
-
-			for (int vector1 = 0; vector1 < (uneqs.size() + 1); vector1++)
-			{
-				jacobian2[vector1] = std::vector<double>(uneqs.size() + 1);
-			}
-
-			// new code
-			jacdim = (uneqs.size() + 1);
-			jacobian5 = new double[jacdim * jacdim];
-		}
-*/
-		//originalMaxIter = maxIter;
 		totalNrIter = 1;
 
 		try
@@ -577,7 +536,7 @@ namespace orchestracpp
 				for (int fnr = 0; fnr < nrActiveUneqs; fnr++)
 				{
 					//jacobian2[fnr][i] = (activeUneqs[fnr]->jacobianResidual - activeUneqs[fnr]->centralResidual) / activeUneqs[i]->un_delta;
-					jacobian5[nrActiveUneqs * fnr + i] = (activeUneqs[fnr]->jacobianResidual - activeUneqs[fnr]->centralResidual) / activeUneqs[i]->un_delta;
+					jacobian[nrActiveUneqs * fnr + i] = (activeUneqs[fnr]->jacobianResidual - activeUneqs[fnr]->centralResidual) / activeUneqs[i]->un_delta;
 				}
 			}
 
@@ -591,18 +550,13 @@ namespace orchestracpp
 
 			jacprinted = true;
 
-
     		//FileWriter* out = FileBasket::getFileWriter(nullptr, "jacobian_cpp.txt");
 
-			// new jacobian
 			for (int i = 0; i < nrActiveUneqs; i++) {
 				for (int j = 0; j < nrActiveUneqs; j++) {
-					//out->write(IO::format(jacobian2[i][j], 25, 8));
-					std::cout << IO::format(jacobian5[nrActiveUneqs * i + j], 25, 8);
-					//out->write(IO::format(jacobian5[nrActiveUneqs *i+j], 25, 8));
+					std::cout << IO::format(jacobian[nrActiveUneqs * i + j], 25, 8);
 				}
 				std::cout << std::endl;
-				//out->write("\n");
 			}
 		
 	    }
@@ -610,7 +564,7 @@ namespace orchestracpp
 		void UnEqGroup::adaptEstimations() //throw(OrchestraException)
 		{
 
-			ludcmp_plus_lubksb_new(jacobian5, nrActiveUneqs);
+			ludcmp_plus_lubksb_new(jacobian, nrActiveUneqs);
 
 			/**
 			 * Determine the maximum common factor for changing the unknowns in the

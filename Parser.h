@@ -277,6 +277,8 @@ namespace orchestracpp
 		PlusNode* originalPlusNode;
 		double* factors;
 
+		int nrTimesConstant = 0;
+
 	public:
 		~MultiPlusNode()
 		{
