@@ -20,7 +20,7 @@
 // This demonstration program shows how the ORCHESTRA chemical solver can be used from other codes.
 // 
 //
-// Hans Meeussen, Januari, 2026
+// Hans Meeussen, Januari, 2026 August 2026
 //
 //
 // The following ORCHESTRA object classes are used: 
