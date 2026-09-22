@@ -52,7 +52,14 @@ namespace orchestracpp
 		FileBasket *fileBasket = nullptr; // the default file basket that is used for including files.
 		bool logactivities     = false; // just a flag that can be set with  the keyword @logactivities:
 
-		std::string separatorChar{"//"};
+		// original std::string separatorChar{"//"};
+
+		std::string separatorChar =
+#ifdef _WIN32
+			"\\";  // windows
+#else
+			"/";   // linux osx
+#endif
 
 	private:
 		bool warnForUndefinedObjects = false;

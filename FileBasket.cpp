@@ -6,8 +6,15 @@ namespace orchestracpp
 {
 
 	std::string FileBasket::workingDirectory = "";
-	std::string FileBasket::fileSeparatorChar = "\\";
+	//std::string FileBasket::fileSeparatorChar = "\\";
 //	std::string FileBasket::fileSeparatorChar = "/";
+
+	std::string FileBasket::fileSeparatorChar =
+#ifdef _WIN32
+	"\\";  // windows
+#else
+	"/";   // linux osx
+#endif
 
 	std::string FileBasket::getWorkingDirectory()
 	{
