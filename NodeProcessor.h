@@ -3,16 +3,13 @@
 #include <condition_variable>
 #include <thread>
 #include <mutex>
-//#include <experimental/random>
+#include <stack>
 
 //#include "NodeType.h"
 #include "Node.h"
 #include "Calculator.h"
 #include "StopFlag.h"
 #include "IO.h"
-
-//#include <random>
-//#include <ctime>
 
 using namespace std;
 using namespace orchestracpp;
@@ -24,26 +21,26 @@ namespace orchestracpp
 
 	private:
 		vector<Calculator*> calculators;
-		std::vector<thread*> threads;
+		vector<thread*> threads;
 		vector<Node*>* nodes = nullptr;
 		int currentNodeNr = 0;
 
-		StopFlag* sf = nullptr;
+		StopFlag* stopFlag = nullptr;
 
-		std::mutex mtx;
-		std::condition_variable condition;
-		std::condition_variable busyCondition;
-		int nrBusyThreads = 0;
-
+		std::mutex mtx; 
+	
 		bool quit = false;
-		bool startProcessing = false;
-		bool lastNodeTaken = false;
+
+		std::condition_variable readyForProcessingCondition;
+		bool readyForProcessing = false;
+		int nrThreadsWaitingForProcessing = 0;
+
+		std::condition_variable finishedProcessingCondition;
+		bool finishedProcessing = false;
+		int nrThreadsFinishedProcessing = 0;
 
 		int memoryOption = 0; // 0 = no memory, so use previous node value (transport),  
 		                      // 1 = use previous succesful node  (serial calculation, transport intialize)
-
-		//int sort_indx;
-
 		int setSize = 1;
 
 	public:
@@ -78,17 +75,9 @@ namespace orchestracpp
 
 	private:
 
-	//	Node* getNextNode();
-
 		vector<Node*>* getNextNodes();
 
 		void runf(Calculator* c);
-
-		void incNrBusy();
-
-		void decNrBusy();
-
-		bool isReady();
 
 	};
 }
