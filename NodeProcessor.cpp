@@ -5,7 +5,7 @@ namespace orchestracpp
 {
 	NodeProcessor::NodeProcessor(Calculator* calculator, int nrThreads_in, StopFlag* sf, vector<Node*>* nodes) {
 		this->nodes = nodes;
-		this->sf = sf;
+		this->stopFlag = sf;
 
 		if (nrThreads_in > 0) { // if nr of threads is negative we determine number automatically
 			this->nrThreads = nrThreads_in;
@@ -90,10 +90,13 @@ namespace orchestracpp
 			currentNodeNr = 0;
 			nrThreadsWaitingForProcessing++;
 
+			// we wait until all worker threads plus this main thread are waiting at this barrier
 			if (nrThreadsWaitingForProcessing == nrThreads + 1) {
-				readyForProcessing = true;
-				nrThreadsFinishedProcessing = 0;
+				readyForProcessing = true; // signal that the worker threads can pass the barrier and can start processing
+				// initialize the variables at the start of the processing task
+				nrThreadsFinishedProcessing = 0; 
 				finishedProcessing = false;
+				// and notify the other worker threads and main thread
 				readyForProcessingCondition.notify_all();
 			}
 			readyForProcessingCondition.wait(lock, [this] {return readyForProcessing; }); // true indicates that we can (re)start processing
